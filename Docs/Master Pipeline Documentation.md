@@ -14,16 +14,11 @@
 # The Forge: Data Factory Engine Documentation v0.1
 
 ## 1. Global Directory Architecture
-# The Forge: Data Factory Engine Documentation v0.1
-
-## 1. Global Directory Architecture
 data_factory/
+├── .git/               # [HIDDEN] Local Version Control Database (Active)
+├── .gitignore          # (Completed) Root-Level Git Exclusion Map
 ├── Data/               # Data Storage Layer
-│   └── raw/            # [Immutable Raw Inflow] 
-│       ├── market_trends.csv          # (Active) Universal Middleman
-│       ├── api_products.json          # (Active) Semi-Structured API Payload
-│       ├── supplier_catalog.xlsx      # (Active) Enterprise Supplier Sheet
-│       └── historical_demand.parquet  # (Active) High-Performance Binary Columnar
+│   └── raw/            # [Immutable Raw Inflow - Safely Ignored by Git] 
 ├── templates/          # [The Modular Toolbox]
 │   ├── __init__.py     # (Initialized) Package Module Mapping
 │   ├── ingestion.py    # (Completed) Dynamic Multi-Format Factory Engine
@@ -33,5 +28,4 @@ data_factory/
 ├── Docs/               # [Documentation & Dependencies Vault]
 │   ├── requirements.txt # (Updated) Pinned Package Version Manifest
 │   └── master_pipeline.md # (Active) Core Project Manual
-├── pipeline.py         # [The Core Orchestration Engine] Wired to Configs & Factory
-└── generate_mock_data.py # [Testing Utility] Multi-Format Mock Data Generator
+└── pipeline.py         # [The Core Orchestration Engine] Wired to Configs & Factory
