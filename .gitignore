@@ -1,0 +1,17 @@
+# Local virtual environment sandbox
+venv/
+.venv/
+env/
+
+# Python caching mechanisms
+__pycache__/
+*.pyc
+
+# Local runtime data files (keeps your data private & clean)
+Data/raw/*.csv
+Data/raw/*.json
+Data/raw/*.xlsx
+Data/raw/*.parquet
+
+# Mac OS specific system files
+.DS_Store

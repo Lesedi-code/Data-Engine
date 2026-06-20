@@ -1,0 +1,22 @@
+{
+    "environment": "development",
+    "active_source": "json_api_payload",
+    "data_sources": {
+        "csv_market_data": {
+            "format": "CSV",
+            "path": "Data/raw/market_trends.csv"
+        },
+        "parquet_historical_data": {
+            "format": "PARQUET",
+            "path": "Data/raw/historical_demand.parquet"
+        },
+        "json_api_payload": {
+            "format": "JSON",
+            "path": "Data/raw/api_products.json"
+        },
+        "excel_supplier_catalog": {
+            "format": "EXCEL",
+            "path": "Data/raw/supplier_catalog.xlsx"
+        }
+    }
+}
