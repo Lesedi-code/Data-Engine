@@ -11,9 +11,6 @@
 ## 2. Global Directory Architecture
 *Visual layout of the workspace layers:*
 
-# The Forge: Data Factory Engine Documentation v0.1
-
-## 1. Global Directory Architecture
 data_factory/
 ├── .git/               # [HIDDEN] Local Version Control Database (Active)
 ├── .gitignore          # (Completed) Root-Level Git Exclusion Map
@@ -22,10 +19,10 @@ data_factory/
 ├── templates/          # [The Modular Toolbox]
 │   ├── __init__.py     # (Initialized) Package Module Mapping
 │   ├── ingestion.py    # (Completed) Dynamic Multi-Format Factory Engine
-│   └── validation.py   # (Staged) Quality Control Gatekeeper Framework
+│   └── validation.py   # (Completed) Quality Control Gatekeeper Framework
 ├── configs/            # [Decoupled Configuration Layer]
 │   └── pipeline.json   # (Completed) Central Ingestion Routing Panel
 ├── Docs/               # [Documentation & Dependencies Vault]
 │   ├── requirements.txt # (Updated) Pinned Package Version Manifest
-│   └── master_pipeline.md # (Active) Core Project Manual
-└── pipeline.py         # [The Core Orchestration Engine] Wired to Configs & Factory
+│   └── Master Pipeline Documentation.md # (Active) Core Project Manual
+└── pipeline.py         # [The Core Orchestration Engine] Aligned & Armed with Validation

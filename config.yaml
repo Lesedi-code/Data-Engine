@@ -1,0 +1,14 @@
+datasets:
+  risk_assessment:
+    format: "CSV"
+    path: "Data/raw/market_trends.csv"
+    validation:
+      required_columns: ["product_id", "product_name", "demand_score"]
+      numeric_columns: ["demand_score"]
+
+  customer_details:
+    format: "JSON"
+    path: "Data/raw/api_products.json"
+    validation:
+      required_columns: ["product_id", "stock_level", "price"]
+      numeric_columns: ["stock_level", "price"]
