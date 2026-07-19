@@ -1,4 +1,4 @@
-# The Forge: A Configuration-Driven ETL Data Engine
+# A Configuration-Driven ETL Data Engine
 
 A lightweight, configuration-driven ETL (Extract, Transform, Load) framework designed to ingest raw flat files, execute automated data cleaning based on declarative YAML rules, and stream optimized memory matrices directly into a local PostgreSQL staging environment.
 
