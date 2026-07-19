@@ -1,12 +1,15 @@
-datasets:
-  risk_assessment:
-    path: "Data/raw/historical_demand.parquet"
-    format: "PARQUET"
-    validation:
-      required_columns: ["product_id", "demand_score", "price"]
+# Global Network Routing Target for Postgres.app on your MacBook Pro
 
-  customer_details:
-    path: "Data/raw/api_products.json"
-    format: "JSON"
-    validation:
-      required_columns: ["product_id", "category"]
+connection_uri: "postgresql://localhost/postgres"
+
+datasets:
+  operational_metrics:
+    path: "/Users/lesedimotleleng/Data Factory/Data/raw/dirty_clients_test.csv"
+    format: "CSV"
+    sql_script: "sql/transform_gold.sql"
+
+    wrangling:
+      deduplicate: true
+      standardize_casing: []
+      impute_missing:
+        join_date: "1997/06/04"
