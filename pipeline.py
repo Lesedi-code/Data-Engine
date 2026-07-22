@@ -1,3 +1,6 @@
+import sys
+import json
+import yaml
 import yaml
 import io 
 import pandas as pd 
@@ -8,14 +11,26 @@ from templates.Wrangler import DataWrangler
 def run_pipeline():
     print("\n===================================================")
     print("🚀 THE FORGE: DATA ENGINE")
-    print("=====================================================")
+    print("===================================================")
+    
+    # Resolve config path from terminal arguments
+    config_path = "config.yaml"
+    if "--config" in sys.argv:
+        idx = sys.argv.index("--config")
+        if idx + 1 < len(sys.argv):
+            config_path = sys.argv[idx + 1]
 
-    # 1. Load the central configuration mapping rules
-    with open("config.yaml", "r") as f:
-        config = yaml.safe_load(f)
+    print(f"📄 Loading configuration from: {config_path}")
+
+    # Load configuration
+    with open(config_path, "r") as f:
+        if config_path.endswith(".json"):
+            config = json.load(f)
+        else:
+            config = yaml.safe_load(f)
 
     db_uri = config.get("connection_uri", "postgresql://localhost/postgres")
-    datasets_map = config.get("datasets", {})
+    datasets_map = config.get("data_sources", {})
 
     # 2. Initialize our specialized modular architectural components
     ingest_factory = IngestionFactory(connection_uri=db_uri)
