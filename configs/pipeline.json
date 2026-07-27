@@ -1,22 +1,36 @@
 {
     "environment": "development",
-    "active_source": "json_api_payload",
-    "data_sources": {
-        "csv_market_data": {
-            "format": "CSV",
-            "path": "Data/raw/market_trends.csv"
-        },
-        "parquet_historical_data": {
-            "format": "PARQUET",
-            "path": "Data/raw/historical_demand.parquet"
-        },
-        "json_api_payload": {
-            "format": "JSON",
-            "path": "Data/raw/api_products.json"
-        },
-        "excel_supplier_catalog": {
-            "format": "EXCEL",
-            "path": "Data/raw/supplier_catalog.xlsx"
+    "engine_name": "Universal Data Engine",
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "dbname": "postgres",
+        "user": "postgres",
+        "password": ""
+    },
+    "active_source": "primary_ingestion",
+    "pipelines": {
+        "primary_ingestion": {
+            "source_format": "CSV",
+            "source_path": "Data/raw/dirty_clients_test.csv",
+            "target_tables": {
+                "bronze": "bronze_raw_landing",
+                "silver": "silver_cleansed_records",
+                "gold": "gold_aggregated_metrics"
+            },
+            "silver_rules": {
+                "drop_columns":[],
+                "impute_strategies": {
+                    "numeric_default": "median",
+                    "categorical_default": "UNKNOWN"
+                },
+                "uppercase_columns":[]
+            },
+            "gold_rules": {
+                "group_by_columns": null,
+                "metrics":["mean", "count"]
+            }
         }
     }
-}
+} 
+

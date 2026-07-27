@@ -1,0 +1,35 @@
+{
+  "pipeline_name": "dani_group_google_merchant_feed",
+  "source": {
+    "type": "mysql",
+    "connection_ref": "ELITEHOST_MYSQL",
+    "query": "SELECT id, name AS title, sku, description, price, stock, image FROM products WHERE is_active = 1"
+  },
+  "transformations": [
+    {
+      "step": "clean_html",
+      "target_column": "description"
+    },
+    {
+      "step": "format_price",
+      "source_column": "price",
+      "target_column": "price",
+      "currency": "ZAR"
+    },
+    {
+      "step": "map_availability",
+      "source_column": "stock",
+      "target_column": "availability"
+    },
+    {
+      "step": "build_image_url",
+      "source_column": "image",
+      "target_column": "image_link",
+      "base_url": "https://danigroup.co.za/images/"
+    }
+  ],
+  "target": {
+    "postgres_table": "stg_google_merchant_feed",
+    "export_csv": "exports/google_merchant_feed.csv"
+  }
+}

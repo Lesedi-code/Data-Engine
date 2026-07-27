@@ -7,7 +7,7 @@ import seaborn as sns
 class DiscoveryProfiler:
     """Computes heavy mathematical profiling metrics and exports visual plots."""
     
-    def __init__(self, output_dir="Docs/plots"):
+    def __init__(self, output_dir="reports"):
         self.output_dir = output_dir
         # Ensure the directory exists locally on your workstation
         os.makedirs(self.output_dir, exist_ok=True)

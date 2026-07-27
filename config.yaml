@@ -1,15 +1,12 @@
 # Global Network Routing Target for Postgres.app on your MacBook Pro
 
+# PostgreSQL Connection String
 connection_uri: "postgresql://localhost/postgres"
 
-datasets:
-  operational_metrics:
-    path: "/Users/lesedimotleleng/Data Factory/Data/raw/dirty_clients_test.csv"
-    format: "CSV"
-    sql_script: "sql/transform_gold.sql"
-
-    wrangling:
-      deduplicate: true
-      standardize_casing: []
-      impute_missing:
-        join_date: "1997/06/04"
+# Default Directory Paths
+directories:
+  raw: "Data/raw"
+  silver: "Data/silver"
+  gold: "Data/gold"
+    
+    
