@@ -1,12 +1,26 @@
-# Global Network Routing Target for Postgres.app on your MacBook Pro
+# Connection Enpoints
+sources:
+  dani_group_mysql:
+    dialect: "mysql+pymysql"
+    host: "danigroup.co.za" # or server IP
+    port: 3306
+    database: "danigrou_danisite_db"
+    username: "danigrou_admin"
+    password: "Gudi123!" # Replace with your password
 
-# PostgreSQL Connection String
-connection_uri: "postgresql://localhost/postgres"
+targets:
+  local_postgres:
+    connection_uri: "postgresql://localhost/postgres"
 
-# Default Directory Paths
+# Medallion Engine Paths
 directories:
   raw: "Data/raw"
   silver: "Data/silver"
   gold: "Data/gold"
-    
+
+# Capstone Ingestion Targets
+ingestion:
+  - source_id: "dani_group_mysql"
+    source_query: "SELECT * FROM products;"
+    target_table: "bronze_products"
     
