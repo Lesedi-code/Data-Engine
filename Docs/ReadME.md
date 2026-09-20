@@ -17,8 +17,6 @@ This engine is built to enforce a **strict separation of infrastructure and conf
 
 ## 🧠 Engineering Design & Architecture Decisions
 
-## 🧠 Engineering Design & Architecture Decisions
-
 This section outlines the core engineering philosophy, architectural trade-offs, and design patterns implemented in Version 2 (v2) of the Data Engine to ensure scalability, maintainability, and enterprise readiness.
 
 ### 1. Configuration-Driven vs. Hardcoded ETL Pipelines
