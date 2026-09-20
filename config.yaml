@@ -1,16 +1,7 @@
-# Connection Enpoints
-sources:
-  dani_group_mysql:
-    dialect: "mysql+pymysql"
-    host: "danigroup.co.za" # or server IP
-    port: 3306
-    database: "danigrou_danisite_db"
-    username: "danigrou_admin"
-    password: "Gudi123!" # Replace with your password
-
+# Target Staging Database (PostgreSQL inside Docker)
 targets:
   local_postgres:
-    connection_uri: "postgresql://localhost/postgres"
+    connection_uri: "postgresql://engine_user:engine_password@postgres_db:5432/staging_db"
 
 # Medallion Engine Paths
 directories:
@@ -18,9 +9,6 @@ directories:
   silver: "Data/silver"
   gold: "Data/gold"
 
-# Capstone Ingestion Targets
-ingestion:
-  - source_id: "dani_group_mysql"
-    source_query: "SELECT * FROM products;"
-    target_table: "bronze_products"
+# External DB Ingestion Tasks (Empty for local file ingestion)
+ingestion: []
     

@@ -1,0 +1,37 @@
+services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: data_engine_postgres
+    environment:
+      POSTGRES_DB: staging_db
+      POSTGRES_USER: engine_user
+      POSTGRES_HOST_AUTH_METHOD: trust # <--- Allows passwordless local connections
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  etl_engine:
+    build: .
+    container_name: data_engine_app
+    depends_on:
+      - postgres_db
+    environment:
+      DB_HOST: postgres_db
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-engine_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-engine_password}
+      DB_NAME: ${POSTGRES_DB:-staging_db}
+      # External Source Connection Variables
+      MYSQL_HOST: ${EXTERNAL_MYSQL_HOST:-localhost}
+      MYSQL_USER: ${EXTERNAL_MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${EXTERNAL_MYSQL_PASSWORD:-root}
+      MYSQL_DATABASE: ${EXTERNAL_MYSQL_DB:-sample_db}
+    volumes:
+      - ./configs:/app/configs
+      - ./Data:/app/Data
+
+volumes:
+  postgres_data:
+
+    

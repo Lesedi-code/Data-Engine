@@ -2,35 +2,109 @@
     "environment": "development",
     "engine_name": "Universal Data Engine",
     "database": {
-        "host": "localhost",
+        "host": "postgres_db",
         "port": 5432,
-        "dbname": "postgres",
-        "user": "postgres",
-        "password": ""
+        "dbname": "staging_db",
+        "user": "engine_user",
+        "password": "engine_password"
     },
     "active_source": "primary_ingestion",
     "pipelines": {
         "primary_ingestion": {
             "source_format": "CSV",
-            "source_path": "Data/raw/dirty_clients_test.csv",
+            "source_path": "Data/raw/products.csv",
             "target_tables": {
-                "bronze": "bronze_raw_landing",
-                "silver": "silver_cleansed_records",
-                "gold": "gold_aggregated_metrics"
+                "bronze": "bronze_products",
+                "silver": "silver_products_cleansed",
+                "gold": "gold_products_summary"
             },
             "silver_rules": {
-                "drop_columns":[],
-                "impute_strategies": {
-                    "numeric_default": "median",
-                    "categorical_default": "UNKNOWN"
-                },
-                "uppercase_columns":[]
+    "drop_columns": [
+        "unnamed_col_0", 
+        "temporary_flag", 
+        "legacy_id_deprecated"
+    ],
+    "rename_columns": {
+        "prod_title": "product_name",
+        "qty_in_stock": "inventory_count",
+        "unit_cost": "price"
+    },
+    "uppercase_columns": [
+        "product_name", 
+        "category", 
+        "supplier_region"
+    ],
+    "impute_strategies": {
+        "numeric_default": "median",
+        "categorical_default": "UNKNOWN_VAL",
+        "custom_column_imputations": {
+            "inventory_count": 0,
+            "discount_percentage": 0.0
+        }
+    },
+    "type_casts": {
+        "product_id": "string",
+        "price": "float",
+        "inventory_count": "int",
+        "is_active": "boolean"
+    },
+    "filter_conditions": {
+        "min_price": 0.01,
+        "exclude_categories": ["TEST", "DEPRECATED", "OBSOLETE"]
+    },
+    "remove_duplicates": true,
+    "trim_whitespace": true
+}
             },
             "gold_rules": {
                 "group_by_columns": null,
-                "metrics":["mean", "count"]
+                "metrics": ["mean", "count"]
+            }
+        },
+        "excel_sales_ingestion": {
+            "source_format": "EXCEL",
+            "source_path": "Data/raw/sales_data.xlsx",
+            "sheet_name": "Q3_Sales",
+            "target_tables": {
+                "bronze": "bronze_excel_sales",
+                "silver": "silver_sales_cleansed",
+                "gold": "gold_monthly_revenue"
+            },
+            "silver_rules": {
+                "drop_columns": ["unnamed_col"],
+                "impute_strategies": {
+                    "numeric_default": 0,
+                    "categorical_default": "N/A"
+                },
+                "uppercase_columns": ["region", "category"]
+            },
+            "gold_rules": {
+                "group_by_columns": ["region"],
+                "metrics": ["sum", "mean"]
+            }
+        },
+        "parquet_events_ingestion": {
+            "source_format": "PARQUET",
+            "source_path": "Data/raw/clickstream.parquet",
+            "target_tables": {
+                "bronze": "bronze_clickstream",
+                "silver": "silver_events_cleaned",
+                "gold": "gold_daily_active_users"
+            },
+            "silver_rules": {
+                "drop_columns": [],
+                "impute_strategies": {
+                    "numeric_default": 0,
+                    "categorical_default": "NONE"
+                },
+                "uppercase_columns": []
+            },
+            "gold_rules": {
+                "group_by_columns": ["event_date"],
+                "metrics": ["count", "nunique"]
             }
         }
     }
-} 
+
+
 

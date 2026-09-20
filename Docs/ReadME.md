@@ -15,24 +15,44 @@ This engine is built to enforce a **strict separation of infrastructure and conf
 
 ---
 
-## 📊 Analytics & BI Integration (v0.2)
+## 🧠 Engineering Design & Architecture Decisions
 
-The engine serves business-ready **Gold Layer** endpoints directly consumed by **Tableau Desktop**:
+## 🧠 Engineering Design & Architecture Decisions
 
-* **Executive Dashboard:** Live 2-tier dashboard architecture monitoring portfolio performance.
-* **Key Visual Endpoints:**
-  * **Category Metrics (`gold_category_metrics`):** Top categories ranked by total inventory value (R134M+ working capital).
-  * **Price Brackets (`gold_price_brackets`):** Product distribution mapped across Budget, Mid-Range, Premium, and High-End tiers.
-  * **Inventory Alerts (`gold_inventory_alerts`):** Operational supply chain health tracking (Healthy Stock vs. Low Stock Warnings).
-* **Documentation:** Executive analytics report, observations, and engineering challenge breakdown published in `Docs/`.
+This section outlines the core engineering philosophy, architectural trade-offs, and design patterns implemented in Version 2 (v2) of the Data Engine to ensure scalability, maintainability, and enterprise readiness.
+
+### 1. Configuration-Driven vs. Hardcoded ETL Pipelines
+* **The Challenge:** Traditional ETL pipelines hardcode transformation logic, source schemas, and table mappings directly into Python scripts. Adding a new dataset or modifying a column mapping requires rewriting core pipeline execution code, introducing regression risks and high maintenance overhead.
+* **The Solution:** We decoupled execution logic from configuration. The engine reads a central declarative matrix (`configs/pipeline.json`) that dictates source paths, schemas, and target layers.
+* **Engineering Takeaway:** *Demonstrates adherence to the Open-Closed Principle (SOLID) and production-grade engineering principles where code is reusable and business logic changes are handled via configuration rather than redeploying source code.*
+
+### 2. Medallion Data Architecture (Bronze ➔ Silver ➔ Gold)
+* **The Challenge:** Raw incoming data (multi-format CSVs, JSONs, Excel files) often contains anomalies, duplicates, and missing values. Pushing raw data directly to reporting tools results in corrupted dashboards and incorrect business metrics.
+* **The Solution:** Implemented a strict 3-tier Medallion architecture:
+  * **Bronze Layer:** Acts as a faithful, immutable landing zone preserving raw multi-format imports inside PostgreSQL staging tables with automated data profiling.
+  * **Silver Layer:** Standardizes data via deterministic cleaning—handling missing value imputation, date parsing, string normalization (`INITCAP`), and primary key deduplication.
+  * **Gold Layer:** Pre-computes business-ready aggregate tables (`gold_*`) and metrics designed for direct sub-second consumption by BI tools like Tableau.
+* **Engineering Takeaway:** *Shows a deep understanding of modern data engineering best practices, separating data ingestion, cleansing, and serving concerns.*
+
+### 3. Containerized Isolation via Docker Compose
+* **The Challenge:** Dependency drift and "it works on my machine" syndromes disrupt deployments, especially when managing local PostgreSQL database instances alongside Python runtime environments.
+* **The Solution:** Fully containerized the data pipeline and database engine using **Docker Compose**. Python transformation scripts execute inside an isolated container (`etl_engine`) with volume-mounted local code files.
+* **The Architectural Win:** Local file-system volume mounting allows developers to instantly edit code and run local transformations without triggering expensive container image rebuilds (`--build`), balancing rapid developer iteration with containerized environment reproducibility.
+* **Engineering Takeaway:** *Proves proficiency in modern DevOps, container networking, volume persistence, and creating seamless developer experiences.*
+
+### 4. High-Performance Bulk Streaming & Ingestion
+* **The Challenge:** Standard row-by-row database insertions (`INSERT INTO ... VALUES`) scale poorly and bottleneck heavily when processing tens of thousands of records.
+* **The Solution:** Bypassed row-by-row bottlenecks by leveraging optimized SQLAlchemy engines coupled with native high-performance binary streaming mechanisms straight into PostgreSQL target schemas.
+* **Engineering Takeaway:** *Highlights optimization-minded coding practices and performance tuning for high-volume data pipelines.*
+
+
+
+
 
 ---
 
-## 💻 Technical Stack & Environment
+## 🐳 Running with Docker Compose
 
-* **Host Environment:** macOS Core Architecture (Apple MacBook Pro)
-* **Primary IDE & Tools:** Visual Studio Code & Terminal-native interfaces
-* **Visualization & Reporting:** Tableau Desktop, Automated Executive DOCX Reporting
-* **Containerization & Database:** Docker Compose running PostgreSQL 15 Engine
-* **Data Architecture Pattern:** Full Medallion Staging Concept (Raw Inputs ➔ Bronze ➔ Silver ➔ Gold)
-* **Core Dependencies:** Python 3.11, Pandas, PyYAML, SQLAlchemy, Psycopg2-Binary, Matplotlib, Seaborn
+1. **Start the database and container environment:**
+   ```bash
+   docker compose up -d
