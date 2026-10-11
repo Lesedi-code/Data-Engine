@@ -1,0 +1,17 @@
+targets:
+  local_postgres:
+    connection_uri: "postgresql://engine_user:engine_password_123@postgres_db:5432/staging_db"
+directories:
+  raw: "Data/raw"
+  silver_staging: "Data/silver_staging"
+  gold_exports: "Data/gold_exports"
+
+datasets:
+  products:
+    file_name: "products.csv"
+    format: "CSV"
+    primary_key: "id"
+    group_by: "category_id"
+
+ingestion: []
+    

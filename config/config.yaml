@@ -1,0 +1,19 @@
+targets:
+  local_postgres:
+    connection_uri: "postgresql://engine_user:engine_password_123@localhost:5432/staging_db"
+
+directories:
+  raw: "Data/raw"
+  silver_staging: "Data/silver_staging"
+  gold_exports: "Data/gold_exports"
+
+datasets:
+  products:
+    file_name: "One Piece json.json"
+    format: "JSON"            # Options: EXCEL, JSON, CSV, PARQUET
+    sheet_name: 0              # Sheet index (0, 1) or tab name ("Sheet1")
+    primary_key: "id"
+    group_by: "release_year"
+
+ingestion: []
+    

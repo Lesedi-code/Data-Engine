@@ -1,18 +1,20 @@
-# Usse an official light weight Python image
-
+# Use an official lightweight Python image
 FROM python:3.11-slim
 
 # Set working directory inside the container
 WORKDIR /app
 
-# Prevent Python fromwriting pyc files and buffer stdout/stderr
+# Prevent Python from writing pyc files and buffer stdout/stderr
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies (needed for Postgres connectivity like psycopg2)
+# Install system dependencies (including Postgres dev files, Tesseract OCR, and FFmpeg)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    tesseract-ocr \
+    ffmpeg \
     libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install requirements

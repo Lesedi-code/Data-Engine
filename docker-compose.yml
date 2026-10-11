@@ -1,37 +1,39 @@
+version: '3.8'
+
 services:
   postgres_db:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: data_engine_postgres
     environment:
-      POSTGRES_DB: staging_db
-      POSTGRES_USER: engine_user
-      POSTGRES_HOST_AUTH_METHOD: trust # <--- Allows passwordless local connections
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
 
-  etl_engine:
+  data_engine_app:
     build: .
     container_name: data_engine_app
-    depends_on:
-      - postgres_db
-    environment:
-      DB_HOST: postgres_db
-      DB_PORT: 5432
-      DB_USER: ${POSTGRES_USER:-engine_user}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-engine_password}
-      DB_NAME: ${POSTGRES_DB:-staging_db}
-      # External Source Connection Variables
-      MYSQL_HOST: ${EXTERNAL_MYSQL_HOST:-localhost}
-      MYSQL_USER: ${EXTERNAL_MYSQL_USER:-root}
-      MYSQL_PASSWORD: ${EXTERNAL_MYSQL_PASSWORD:-root}
-      MYSQL_DATABASE: ${EXTERNAL_MYSQL_DB:-sample_db}
+    command: tail -f /dev/null
     volumes:
-      - ./configs:/app/configs
-      - ./Data:/app/Data
+      - .:/app
+    environment:
+      - DB_HOST=postgres_db
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    tty: true
+    stdin_open: true
 
 volumes:
   postgres_data:
-
-    
