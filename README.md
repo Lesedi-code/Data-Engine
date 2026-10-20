@@ -97,6 +97,8 @@ Python 3.10+
 Ollama installed locally with desired models pulled (e.g., ollama pull gemma4:e4b).
 Docker & Docker Compose (optional, for containerized PostgreSQL staging infrastructure).
 
+## IN THE TERMINAL RUN THE FOLLOWING COMMANDS:
+
 ## Step 1: Clone and Set Up Virtual Environment
 git clone https://github.com/Lesedi-code/Data-Engine.git
 cd "Data-Engine"
