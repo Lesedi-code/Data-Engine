@@ -75,3 +75,61 @@
 2026-10-20 21:12:05,431 [INFO] Gold dataset exported to CSV: Data/gold/user_anime_gold.csv
 2026-10-20 21:12:05,432 [INFO] Pipeline successfully completed for 'user_anime' in 275.60 seconds.
 2026-10-20 21:14:38,698 [INFO] Pipeline terminated normally by user.
+2026-10-20 21:26:09,486 [INFO] PostgreSQL database schemas initialized successfully.
+2026-10-20 21:26:09,494 [INFO] DuckDB connection established successfully (data_engine.duckdb).
+2026-10-20 21:26:16,612 [INFO] [PostgreSQL] Persisted 103 records into staging_db.bronze.cola
+2026-10-20 21:26:16,620 [INFO] [DuckDB] Persisted 103 records into bronze.cola
+2026-10-20 21:26:16,620 [INFO] Running Data Quality Assertion Gate for table 'cola'...
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Data provided by SimFin' contains 100 null values (97.1%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 1' contains 6 null values (5.8%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 2' contains 21 null values (20.4%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 3' contains 21 null values (20.4%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 4' contains 21 null values (20.4%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 5' contains 21 null values (20.4%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 6' contains 21 null values (20.4%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 7' contains 21 null values (20.4%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 8' contains 13 null values (12.6%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 9' contains 11 null values (10.7%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 10' contains 10 null values (9.7%).
+2026-10-20 21:26:16,623 [WARNING] DQ Alert: Column 'Unnamed: 11' contains 10 null values (9.7%).
+2026-10-20 21:26:16,625 [INFO] DQ Gate completed. Initial: 103, Cleaned: 96, Dropped: 7
+2026-10-20 21:26:16,637 [INFO] [PostgreSQL] Persisted 96 records into staging_db.silver.cola
+2026-10-20 21:26:16,643 [INFO] [DuckDB] Persisted 96 records into silver.cola
+2026-10-20 21:28:35,635 [INFO] [PostgreSQL] Persisted 96 records into staging_db.gold.cola
+2026-10-20 21:28:35,641 [INFO] [DuckDB] Persisted 96 records into gold.cola
+2026-10-20 21:28:35,644 [INFO] Gold dataset exported to CSV: Data/gold/cola_gold.csv
+2026-10-20 21:28:35,645 [INFO] Pipeline successfully completed for 'cola' in 143.75 seconds.
+2026-10-20 21:36:01,977 [INFO] [PostgreSQL] Persisted 958 records into staging_db.bronze.one_piece_json
+2026-10-20 21:36:01,982 [INFO] [DuckDB] Persisted 958 records into bronze.one_piece_json
+2026-10-20 21:36:01,982 [INFO] Running Data Quality Assertion Gate for table 'one_piece_json'...
+2026-10-20 21:36:01,985 [INFO] DQ Gate completed. Initial: 958, Cleaned: 958, Dropped: 0
+2026-10-20 21:36:02,014 [INFO] [PostgreSQL] Persisted 958 records into staging_db.silver.one_piece_json
+2026-10-20 21:36:02,018 [INFO] [DuckDB] Persisted 958 records into silver.one_piece_json
+2026-10-20 21:38:30,793 [INFO] PostgreSQL database schemas initialized successfully.
+2026-10-20 21:38:30,798 [INFO] DuckDB connection established successfully (data_engine.duckdb).
+2026-10-20 21:38:35,368 [INFO] [PostgreSQL] Persisted 958 records into staging_db.bronze.one_piece_json
+2026-10-20 21:38:35,373 [INFO] [DuckDB] Persisted 958 records into bronze.one_piece_json
+2026-10-20 21:38:35,373 [INFO] Running Data Quality Assertion Gate for table 'one_piece_json'...
+2026-10-20 21:38:35,376 [INFO] DQ Gate completed. Initial: 958, Cleaned: 958, Dropped: 0
+2026-10-20 21:38:35,417 [INFO] [PostgreSQL] Persisted 958 records into staging_db.silver.one_piece_json
+2026-10-20 21:38:35,420 [INFO] [DuckDB] Persisted 958 records into silver.one_piece_json
+2026-10-20 21:40:04,393 [INFO] [PostgreSQL] Persisted 958 records into staging_db.gold.one_piece_json
+2026-10-20 21:40:04,397 [INFO] [DuckDB] Persisted 958 records into gold.one_piece_json
+2026-10-20 21:40:04,400 [INFO] Gold dataset exported to CSV: Data/gold/one_piece_json_gold.csv
+2026-10-20 21:40:04,401 [INFO] Pipeline successfully completed for 'one_piece_json' in 91.08 seconds.
+2026-10-20 21:42:18,142 [INFO] PostgreSQL database schemas initialized successfully.
+2026-10-20 21:42:18,147 [INFO] DuckDB connection established successfully (data_engine.duckdb).
+2026-10-20 21:42:26,075 [INFO] PostgreSQL database schemas initialized successfully.
+2026-10-20 21:42:26,080 [INFO] DuckDB connection established successfully (data_engine.duckdb).
+2026-10-20 21:42:29,999 [INFO] Pipeline terminated normally by user.
+2026-10-20 21:44:57,676 [INFO] PostgreSQL database schemas initialized successfully.
+2026-10-20 21:44:57,685 [INFO] DuckDB connection established successfully (data_engine.duckdb).
+2026-10-20 21:48:00,122 [INFO] PostgreSQL database schemas initialized successfully.
+2026-10-20 21:48:00,127 [INFO] DuckDB connection established successfully (data_engine.duckdb).
+2026-10-20 21:48:13,948 [INFO] [PostgreSQL] Persisted 3 records into staging_db.bronze.inventory
+2026-10-20 21:48:13,962 [INFO] [DuckDB] Persisted 3 records into bronze.inventory
+2026-10-20 21:48:13,962 [INFO] Running Data Quality Assertion Gate for table 'inventory'...
+2026-10-20 21:48:13,970 [INFO] DQ Gate completed. Initial: 3, Cleaned: 3, Dropped: 0
+2026-10-20 21:48:13,985 [INFO] [PostgreSQL] Persisted 3 records into staging_db.silver.inventory
+2026-10-20 21:48:13,987 [INFO] [DuckDB] Persisted 3 records into silver.inventory
+2026-10-20 21:56:55,141 [INFO] Pipeline terminated normally by user.

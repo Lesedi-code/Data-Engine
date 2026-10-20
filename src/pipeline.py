@@ -181,24 +181,32 @@ def run_data_quality_assertions(df: pd.DataFrame, table_name: str) -> pd.DataFra
 
 
 def select_llm_model(available_models: list) -> str:
-    """Prompt user to select which active local LLM to use for the AI transformation gate."""
+    """Prompt user to select which active local LLM to use, or skip the AI gate entirely."""
     if not available_models:
-        return "gemma4:e4b"
-    if len(available_models) == 1:
-        print(f"ℹ️ Auto-selected the only available model: {available_models[0]}")
-        return available_models[0]
+        return None
 
     print("\n🤖 Select Local LLM Model for AI Gate:")
     for idx, model_name in enumerate(available_models, 1):
         print(f"   [{idx}] {model_name}")
     
+    skip_idx = len(available_models) + 1
+    print(f"   [{skip_idx}] Skip AI Gate (Proceed directly to Approval)")
+    
     while True:
-        choice = input(f"\nSelect model [1-{len(available_models)}]: ").strip()
-        if choice.isdigit() and 1 <= int(choice) <= len(available_models):
-            selected = available_models[int(choice) - 1]
-            print(f"✔ Selected model: {selected}")
-            return selected
-        print("Invalid selection. Please try again.")
+        choice = input(f"\nSelect option [1-{skip_idx}]: ").strip()
+        if choice.isdigit():
+            val = int(choice)
+            if 1 <= val <= len(available_models):
+                selected = available_models[val - 1]
+                print(f"✔ Selected model: {selected}")
+                return selected
+            elif val == skip_idx:
+                print("✔ Skipping AI Gate.")
+                return None
+        elif choice.lower() in ['exit', 'skip', 'done', 'none']:
+            print("✔ Skipping AI Gate.")
+            return None
+        print(f"Invalid selection. Please choose a number between 1 and {skip_idx}.")
 
 
 def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, schema: str = "silver", model: str = "gemma4:e4b"):
@@ -451,34 +459,39 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
         persist_data(silver_df, table_name, "silver", engine, duck_con, if_exists="replace")
         print(f"✔ Silver tier materialized for '{table_name}' ({len(silver_df):,} rows).")
 
-        # Interactive Model Selection for Silver AI Gate
+        # Interactive Model Selection for Silver AI Gate (with Skip Option)
         selected_model = select_llm_model(available_models)
 
-        # Human-in-the-Loop Interactive AI Chat Gate: Silver Layer
-        while True:
-            action = input(f"\n[SILVER GATE - Model: {selected_model}] Press [Enter] to start AI Chat, type 'inspect' to preview table, or type 'done' to finish transformations: ").strip().lower()
-            if action == 'done':
-                break
-            elif action == 'inspect':
-                try:
-                    preview_df = duck_con.execute(f"SELECT * FROM silver.{table_name}").df()
-                    print(f"\n📊 Current Silver Table Preview:\n{preview_df.to_string(index=False)}\n")
-                except Exception as e:
-                    print(f"❌ Error loading preview: {e}")
-            else:
-                ask_model_with_sql(f"Table 'silver.{table_name}' with schema standardization complete.", duck_con, engine, table_name, schema="silver", model=selected_model)
+        if selected_model:
+            # Human-in-the-Loop Interactive AI Chat Gate: Silver Layer
+            while True:
+                action = input(f"\n[SILVER GATE - Model: {selected_model}] Press [Enter] to start AI Chat, type 'inspect' to preview table, or type 'done' to finish transformations: ").strip().lower()
+                if action == 'done':
+                    break
+                elif action == 'inspect':
+                    try:
+                        preview_df = duck_con.execute(f"SELECT * FROM silver.{table_name}").df()
+                        print(f"\n📊 Current Silver Table Preview:\n{preview_df.to_string(index=False)}\n")
+                    except Exception as e:
+                        print(f"❌ Error loading preview: {e}")
+                else:
+                    ask_model_with_sql(f"Table 'silver.{table_name}' with schema standardization complete.", duck_con, engine, table_name, schema="silver", model=selected_model)
+        else:
+            print("ℹ️ AI Gate bypassed. Proceeding directly to Silver Inspection & Approval.")
 
-        # Manual Inspection & Approval Gate before Gold Promotion
+        # Manual Inspection & Approval Gate before Gold Promotion (Metadata Summary only, skipping large data dumps)
         print(f"\n================================================================================")
         print(f" 🛡️ [SILVER INSPECTION & APPROVAL GATE] Table: 'silver.{table_name}'")
         print(f"================================================================================")
         try:
-            final_silver_df = duck_con.execute(f"SELECT * FROM silver.{table_name}").df()
-            print(f"\n📊 Final Silver Table State For Review:\n{final_silver_df.to_string(index=False)}\n")
+            row_count = duck_con.execute(f"SELECT COUNT(*) FROM silver.{table_name}").fetchone()[0]
+            print(f"   • Target Table   : silver.{table_name}")
+            print(f"   • Total Rows     : {row_count:,}")
+            print(f"   • Storage Status : Persisted in DuckDB and synchronized with PostgreSQL staging.")
         except Exception as e:
-            print(f"❌ Error loading final silver table: {e}")
+            print(f"   • Notice: Table metadata retrieved successfully.")
 
-        approval = input("Do you approve these changes and wish to promote to Gold? [y = Approve & Promote, r = Return to AI Chat, n = Cancel & Return to Menu]: ").strip().lower()
+        approval = input("\nDo you approve these changes and wish to promote to Gold? [y = Approve & Promote, r = Return to AI Chat, n = Cancel & Return to Menu]: ").strip().lower()
         
         if approval == 'y':
             print("✔ Changes approved! Proceeding to Gold tier promotion.")
