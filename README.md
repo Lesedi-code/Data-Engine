@@ -98,8 +98,8 @@ Ollama installed locally with desired models pulled (e.g., ollama pull gemma4:e4
 Docker & Docker Compose (optional, for containerized PostgreSQL staging infrastructure).
 
 ## Step 1: Clone and Set Up Virtual Environment
-git clone [https://github.com/Lesedi-code/data-factory.git](https://github.com/Lesedi-code/data-factory.git)
-cd "Data Factory"
+git clone https://github.com/Lesedi-code/Data-Engine.git
+cd "Data-Engine"
 python -m venv venv
 source venv/bin/activate
 
