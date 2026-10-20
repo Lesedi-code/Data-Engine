@@ -4,14 +4,21 @@
 
 This engine is built to enforce a **strict separation of infrastructure and configuration**. Instead of hardcoding transformation logic for every new dataset, pipeline behavior is controlled by a central configuration matrix. This keeps execution code lean, fast, and easily scalable across data streams.
 
-###  Core Pillars
+At its core, this project was built to solve a high-friction problem in data science and data engineering: **eliminating the 80% data wrangling tax** (dealing with null value distributions, schema inconsistencies, trailing characters, and manual deduplication) so data scientists and analytics practitioners can spend 100% of their focus on the **20% high-value modeling, predictive features, and business insights** that organizations actually value.
 
-- **Data Science & Analytics Focus:** Automated diagnostic profiling provides immediate visual shape and missing-value density maps.
+### Target Audience & Use Case
+- **Data Scientists & Analytics Practitioners:** Professionals who need clean, standardized data instantly without wasting hours on mechanical data hygiene chores.
+- **Data & Analytics Engineers:** Teams managing complex, multi-format data pipelines who require robust Data Quality (DQ) assertion gates and dual-engine persistence.
+- **Enterprise Operations & IT:** Organizations running legacy backend infrastructure (such as Progress OpenEdge systems) that require modern, secure, API-driven data extraction routes without risking database locks or production downtime.
+
+### Core Pillars
+
+- **Data Science & Analytics Focus:** Automated diagnostic profiling provides immediate visual shape, missing-value density maps, and frees practitioners from mechanical data chores.
 - **Medallion Data Architecture:**
-  - **Bronze Layer (Ingestion & Profiling):** Raw multi-format imports (`.csv`, `.json`, `.parquet`, `.xlsx`) streamed straight into PostgreSQL `bronze_*` staging tables with threshold-gated format recommendations.
-  - **Silver Layer (Cleaning & Standardization):** Missing value imputation, date parsing, string normalization (`INITCAP`), primary key deduplication, and interactive AI-driven SQL transformation gates powered by local Ollama (`gemma4:e4b`).
-  - **Gold Layer (Aggregation & Delivery):** Automated extraction from Silver into business-ready aggregate tables (`gold_*`), reporting CSV exports, and executive visual analytics.
-- **High-Performance Streaming:** Bypasses slow row-by-row insertions by using optimized SQLAlchemy engines and binary/chunked streaming mechanisms straight into PostgreSQL targets.
+  - **Bronze Layer (Ingestion & Profiling):** Raw multi-format imports (`.csv`, `.json`, `.parquet`, `.xlsx`) or live enterprise REST streams streamed straight into PostgreSQL and DuckDB `bronze_*` staging tables with automated file discovery and size-gated format warnings.
+  - **Silver Layer (Cleaning & Standardization):** Missing value imputation, date parsing, string normalization (`INITCAP`), primary key deduplication, and interactive AI-driven SQL transformation gates powered by local Ollama models.
+  - **Gold Layer (Delivery & Exports):** Automated extraction from Silver into business-ready aggregate tables (`gold_*`), reporting CSV exports (`Data/gold/`), and executive visual analytics.
+- **High-Performance Streaming:** Bypasses slow row-by-row insertions by using optimized SQLAlchemy engines and binary/chunked streaming mechanisms straight into PostgreSQL and DuckDB OLAP targets.
 
 ---
 
@@ -20,7 +27,7 @@ This engine is built to enforce a **strict separation of infrastructure and conf
 ### 1. High-Level Data Flow Topology
 
 ```text
-  [ Raw Data Sources ]
+  [ Raw Data Sources / OpenEdge Stream ]
   ├── .csv (Chunked / Batched Stream >500MB Warning)
   ├── .parquet (Native Arrow Batched Stream)
   ├── .xlsx / .xls (Local Parsing / >25MB Warning)
@@ -34,7 +41,8 @@ This engine is built to enforce a **strict separation of infrastructure and conf
          │
          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      POSTGRESQL STAGING DB                      │
+│                  DUAL-ENGINE PERSISTENCE LAYER                  │
+│             (PostgreSQL Staging DB + DuckDB OLAP)               │
 │                                                                 │
 │   ┌────────────────┐     ┌────────────────┐     ┌───────────┐   │
 │   │  BRONZE SCHEMA │ ──► │  SILVER SCHEMA │ ──► │GOLD SCHEMA│   │
@@ -44,25 +52,23 @@ This engine is built to enforce a **strict separation of infrastructure and conf
                                    │                    │
                                    ▼                    ▼
                            ┌───────────────┐    ┌───────────────┐
-                           │ Gemma AI Gate │    │ Gold CSV      │
-                           │(Ollama Local) │    │ Local Exports │
+                           │ Local AI Gate │    │ Gold CSV      │
+                           │(Ollama Models)│    │ Local Exports │
                            └───────────────┘    └───────────────┘
-
----
 ```
 
 ### 2. Medallion Execution Pipeline & AI Gate Sequence
 ```text
-[ Raw File Input ]
+[ Raw File Input / OpenEdge Stream ]
         │
         ▼
  ┌───────────────┐
- │ BRONZE LAYER  │ ──► Stream & Persist raw data to PostgreSQL 'bronze' schema
+ │ BRONZE LAYER  │ ──► Stream & Persist raw data to PostgreSQL & DuckDB 'bronze' schema
  └───────┬───────┘
          │
          ▼
  ┌───────────────┐
- │  BRONZE GATE  │ ──► Interactive CLI Inspection (Ask Gemma AI / Continue)
+ │  BRONZE GATE  │ ──► Automated DQ Assertion Gate (Audits nulls & duplicates)
  └───────┬───────┘
          │
          ▼
@@ -72,17 +78,45 @@ This engine is built to enforce a **strict separation of infrastructure and conf
          │
          ▼
  ┌───────────────┐
- │  SILVER GATE  │ ──► AI Transformation Loop:
- └───────┬───────┘     ├── 1. Engineer requests transformation (e.g. "Drop nulls")
-         │             ├── 2. Gemma AI drafts SQL query via local Ollama
-         │             ├── 3. Transaction-safe execution with auto-rollback on error
-         │             └── 4. Human-in-the-loop interactive review & retry
+ │  SILVER GATE  │ ──► Model-Selectable AI Transformation Loop:
+ └───────┬───────┘     ├── 1. Choose active local LLM (e.g., Gemma, DeepSeek)
+                       ├── 2. Engineer requests transformation (e.g., "Drop column sku")
+                       ├── 3. Selected LLM drafts SQL query via local Ollama
+                       ├── 4. Transaction-safe execution against DuckDB/PostgreSQL
+                       └── 5. Human-in-the-loop interactive review & retry
          ▼
  ┌───────────────┐
  │  GOLD LAYER   │ ──► Promote clean Silver tables to 'gold' schema & export CSV
  └───────────────┘
 
 ```
+## 🛠️ Step-by-Step Installation & Execution Guide
+
+Prerequisites
+Python 3.10+
+Ollama installed locally with desired models pulled (e.g., ollama pull gemma4:e4b).
+Docker & Docker Compose (optional, for containerized PostgreSQL staging infrastructure).
+
+# Step 1: Clone and Set Up Virtual Environment
+git clone [https://github.com/Lesedi-code/data-factory.git](https://github.com/Lesedi-code/data-factory.git)
+cd "Data Factory"
+python -m venv venv
+source venv/bin/activate
+
+# Step 2: Install Dependencies
+Install all required Python packages using the provided requirements file: pip install -r requirements.txt
+
+# Step 3: Start Infrastructure Services (Docker Compose)
+Spin up the containerized PostgreSQL staging database environment: docker-compose up -d
+
+# Step 4: Launch Local Ollama Service
+ollama serve
+
+# Step 5: Run the Master Orchestrator Pipeline
+python -u src/pipeline.py
+
+From here, you can select whether to ingest local structured files (Data/raw/Structured_dataset/) or pull a live enterprise stream from the mock Progress OpenEdge PASOE REST API (src/mock_openedge_server.py).
+
 ## 🧠 Engineering Design & Architecture Decisions
 
 This section outlines the core engineering philosophy, architectural trade-offs, and design patterns implemented in the Data Engine to ensure scalability, maintainability, and enterprise readiness.
