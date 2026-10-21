@@ -122,6 +122,8 @@ python -u src/pipeline.py
 
 From here, you can select whether to ingest local structured files (Data/raw/Structured_dataset/) or pull a live enterprise stream from the mock Progress OpenEdge PASOE REST API (src/mock_openedge_server.py).
 
+"Note: PostgreSQL / Docker staging is optional. If not detected, the pipeline automatically falls back to run entirely through the high-performance local DuckDB OLAP engine (data_engine.duckdb)."
+
 # 🧠 Engineering Design & Architecture Decisions
 
 This section outlines the core engineering philosophy, architectural trade-offs, and design patterns implemented in the Data Engine to ensure scalability, maintainability, and enterprise readiness.
