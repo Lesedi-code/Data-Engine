@@ -101,6 +101,7 @@ At its core, this project was built to solve a high-friction problem in data sci
 ## IN THE TERMINAL RUN THE FOLLOWING COMMANDS:
 
 ## Step 1: Clone and Set Up Virtual Environment
+Clone via Git(Recommended for developers):
 git clone https://github.com/Lesedi-code/Data-Engine.git
 cd "Data-Engine"
 python -m venv venv
