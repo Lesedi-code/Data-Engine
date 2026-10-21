@@ -19,6 +19,7 @@ duckdb>=1.5.4
 pandas>=3.0.3
 pyarrow>=24.0.0
 sqlalchemy>=2.0.51
+psycopg[binary]
 psycopg2-binary==2.9.12
 mysql-connector-python==9.7.0
 PyMySQL==1.2.0
