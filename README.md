@@ -106,6 +106,11 @@ cd "Data-Engine"
 python -m venv venv
 source venv/bin/activate
 
+Option B: Download as ZIP (Alternative for non-Git users)
+Go to the GitHub Repository.
+Click the green Code button at the top right.
+Select Download ZIP, extract the folder on your machine, and open your terminal inside that extracted folder (Data-Engine-main).
+
 ## Step 2: Install Dependencies
 Install all required Python packages using the provided requirements file: pip install -r requirements.txt
 
