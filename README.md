@@ -124,6 +124,32 @@ From here, you can select whether to ingest local structured files (Data/raw/Str
 
 "Note: PostgreSQL / Docker staging is optional. If not detected, the pipeline automatically falls back to run entirely through the high-performance local DuckDB OLAP engine (data_engine.duckdb)."
 
+## For Windows (Powershell/Command Prompt)
+
+git clone [https://github.com/Lesedi-code/Data-Engine.git](https://github.com/Lesedi-code/Data-Engine.git)
+cd "Data-Engine"
+python -m venv venv
+#PowerShell activation:
+.\venv\Scripts\Activate.ps1
+#OR Command Prompt activation:
+venv\Scripts\activate.bat
+
+## Step 2: Install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+
+## Step 3: Start Infrastructure Services (Optional)
+docker-compose up -d
+
+## Step 4: Launch Local Ollama Service
+ollama serve
+
+## Step 5: Connect to the Mock/Live Enterprise Server (Terminal 1)
+python src/mock_openedge_server.py
+
+## Step 6: Run the Master Orchestrator Pipeline (Terminal 2)
+python -u src/pipeline.py
+
 # 🧠 Engineering Design & Architecture Decisions
 
 This section outlines the core engineering philosophy, architectural trade-offs, and design patterns implemented in the Data Engine to ensure scalability, maintainability, and enterprise readiness.
