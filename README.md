@@ -92,10 +92,11 @@ At its core, this project was built to solve a high-friction problem in data sci
 ```
 # 🛠️ Step-by-Step Installation & Execution Guide
 
-Prerequisites
-Python 3.10+
-Ollama installed locally with desired models pulled (e.g., ollama pull gemma4:e4b).
-Docker & Docker Compose (optional, for containerized PostgreSQL staging infrastructure).
+### Prerequisites
+- **Git** (installed on your machine for cloning)
+- **Python 3.10+**
+- **Ollama** installed locally with desired models pulled (e.g., `ollama pull gemma4:e4b`).
+- **Docker & Docker Compose** (optional, for containerized PostgreSQL staging infrastructure).
 
 ## IN THE TERMINAL RUN THE FOLLOWING COMMANDS:
 
