@@ -5,35 +5,18 @@ services:
     image: postgres:15
     container_name: data_engine_postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-staging_db}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d staging_db"]
       interval: 3s
       timeout: 3s
       retries: 5
-
-  data_engine_app:
-    build: .
-    container_name: data_engine_app
-    command: tail -f /dev/null
-    volumes:
-      - .:/app
-    environment:
-      - DB_HOST=postgres_db
-      - OLLAMA_HOST=http://host.docker.internal:11434
-      - PYTHONPATH=/app
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      postgres_db:
-        condition: service_healthy
-    tty: true
-    stdin_open: true
 
 volumes:
   postgres_data:
