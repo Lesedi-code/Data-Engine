@@ -98,6 +98,14 @@ At its core, this project was built to solve a high-friction problem in data sci
 - **Ollama** installed locally with desired models pulled (e.g., `ollama pull gemma4:e4b`).
 - **Docker & Docker Compose** (optional, for containerized PostgreSQL staging infrastructure).
 
+### 🚀 Quick Start (1-Command Workflow)
+
+If you have `make` installed on your machine, you can run:
+
+```bash
+make setup   # Installs dependencies & spins up PostgreSQL in Docker
+make run     # Launches the Master Orchestrator Pipeline
+```
 ## Get the Project Files
 You can obtain the project files using either of the following methods:
 
