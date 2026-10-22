@@ -13,7 +13,7 @@ import pyarrow.parquet as pq
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
 
-# Configure robust logging for execution trace tracking
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -37,7 +37,6 @@ def get_available_ollama_models(base_url: str = "http://localhost:11434") -> lis
 
 
 def check_ollama_service(base_url: str = "http://localhost:11434") -> list:
-    """Verifies that the local Ollama instance is up and lists active downloaded models."""
     print("🔍 Checking Ollama service availability...")
     models = get_available_ollama_models(base_url)
     if models:
@@ -45,8 +44,8 @@ def check_ollama_service(base_url: str = "http://localhost:11434") -> list:
         print(f"📦 Discovered Local LLMs: {', '.join(models)}")
         return models
     
-    print("❌ Error: Ollama service is not running or no models found. Please start it using 'ollama serve' in a separate terminal.")
-    sys.exit(1)
+    print("⚠️ Warning: Ollama service is not active. AI transformation gates will be disabled.")
+    return []  
 
 
 def load_config(config_path: str = "config/pipeline.yaml") -> dict:
@@ -281,8 +280,15 @@ def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, s
                     sync_duckdb_to_postgres(duck_con, engine, table_name, schema_name=schema)
 
                     if not result_df.empty:
-                        print(f"\n📊 Query Results:\n{result_df.to_string(index=False)}")
-                        messages.append({"role": "system", "content": f"Query execution result:\n{result_df.to_string(index=False)}"})
+                        total_rows = len(result_df)
+                        # Universal 1000 threshold limit
+                        if total_rows > 1000:
+                            preview_df = result_df.head(15)
+                            print(f"\n📊 Query Results (Dataset exceeds 1,000 rows - Showing top 15 of {total_rows:,} rows):\n{preview_df.to_string(index=False)}")
+                            messages.append({"role": "system", "content": f"Query execution result (Showing top 15 of {total_rows:,} rows):\n{preview_df.to_string(index=False)}"})
+                        else:
+                            print(f"\n📊 Query Results ({total_rows:,} rows):\n{result_df.to_string(index=False)}")
+                            messages.append({"role": "system", "content": f"Query execution result:\n{result_df.to_string(index=False)}"})
                     else:
                         print("\n✔ Query executed successfully (DDL/DML completed).")
                         messages.append({"role": "system", "content": "Query executed successfully with zero rows returned."})
@@ -470,8 +476,14 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
                     break
                 elif action == 'inspect':
                     try:
-                        preview_df = duck_con.execute(f"SELECT * FROM silver.{table_name}").df()
-                        print(f"\n📊 Current Silver Table Preview:\n{preview_df.to_string(index=False)}\n")
+                        row_count = duck_con.execute(f"SELECT COUNT(*) FROM silver.{table_name}").fetchone()[0]
+                        # Universal 1000 threshold limit for table inspection
+                        if row_count > 1000:
+                            preview_df = duck_con.execute(f"SELECT * FROM silver.{table_name} LIMIT 15").df()
+                            print(f"\n📊 Current Silver Table Preview (Dataset exceeds 1,000 rows - Top 15 of {row_count:,}):\n{preview_df.to_string(index=False)}\n")
+                        else:
+                            preview_df = duck_con.execute(f"SELECT * FROM silver.{table_name}").df()
+                            print(f"\n📊 Current Silver Table Preview ({row_count:,} Rows):\n{preview_df.to_string(index=False)}\n")
                     except Exception as e:
                         print(f"❌ Error loading preview: {e}")
                 else:
