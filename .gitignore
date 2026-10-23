@@ -1,3 +1,7 @@
+# Runtime and Database files
+*.duckdb
+*.log
+
 # Local virtual environment sandbox
 venv/
 .venv/
