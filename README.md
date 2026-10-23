@@ -199,3 +199,8 @@ This section outlines the core engineering philosophy, architectural trade-offs,
 - **The Solution:** Bypassed row-by-row bottlenecks by leveraging optimized SQLAlchemy engines coupled with native high-performance binary streaming mechanisms and chunked iteration (e.g., 500k-row batching for large CSV/Parquet files) straight into PostgreSQL target schemas.
 - **Engineering Takeaway:** *Highlights optimization-minded coding practices and performance tuning for high-volume data pipelines.*
 
+### 5. Fault-Tolerant Graceful Degradation (Production Resilience)
+
+- **The Challenge:** Hard infrastructural dependencies (such as containerized PostgreSQL nodes, database clusters, or external AI/LLM daemons) introduce single points of failure. In standard pipelines, a transient network drop or an offline service instantly crashes the job, triggering expensive on-call alerts and failing SLA requirements.
+- **The Solution:** Implemented robust try-except runtime telemetry and connection probes that dynamically detect infrastructure availability. If primary storage nodes or LLM services are unreachable, the engine seamlessly degrades to a standalone local DuckDB OLAP mode with structured fallback logging—preventing pipeline termination.
+- **Engineering Takeaway:** *Ensures enterprise-grade high availability and uninterrupted operational uptime, protecting critical data workflows against edge-case infrastructure failures and offline environments.*
