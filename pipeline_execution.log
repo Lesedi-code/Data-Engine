@@ -133,3 +133,18 @@
 2026-10-20 21:48:13,985 [INFO] [PostgreSQL] Persisted 3 records into staging_db.silver.inventory
 2026-10-20 21:48:13,987 [INFO] [DuckDB] Persisted 3 records into silver.inventory
 2026-10-20 21:56:55,141 [INFO] Pipeline terminated normally by user.
+2026-10-23 19:09:51,445 [WARNING] PostgreSQL not reachable ((psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)). Operating via DuckDB OLAP engine.
+2026-10-23 19:09:51,453 [INFO] DuckDB connection established successfully (data_engine.duckdb).
+2026-10-23 19:13:26,313 [INFO] [DuckDB] Persisted 3 records into bronze.inventory
+2026-10-23 19:13:26,313 [INFO] Running Data Quality Assertion Gate for table 'inventory'...
+2026-10-23 19:13:26,316 [INFO] DQ Gate completed. Initial: 3, Cleaned: 3, Dropped: 0
+2026-10-23 19:13:26,320 [INFO] [DuckDB] Persisted 3 records into silver.inventory
+2026-10-23 20:04:14,865 [INFO] [DuckDB] Persisted 3 records into gold.inventory
+2026-10-23 20:04:14,869 [INFO] Gold dataset exported to CSV: Data/gold/inventory_gold.csv
+2026-10-23 20:04:14,869 [INFO] Pipeline successfully completed for 'inventory' in 3048.56 seconds.
+2026-10-23 20:21:31,685 [INFO] Pipeline terminated normally by user.

@@ -23,18 +23,15 @@ logging.basicConfig(
     ]
 )
 
-
-def get_available_ollama_models(base_url: str = "http://localhost:11434") -> list:
-    """Queries local Ollama instance and returns a list of installed model names."""
+def get_available_ollama_models(base_url: str) -> list:
     try:
-        response = requests.get(f"{base_url}/api/tags", timeout=3)
+        response = requests.get(f"{base_url}/api/tags", timeout=2)
         if response.status_code == 200:
-            models = response.json().get("models", [])
-            return [m.get("name") for m in models if "name" in m]
-    except requests.ConnectionError:
+            data = response.json()
+            return [model.get("name") for model in data.get("models", [])]
+    except (requests.ConnectionError, requests.Timeout):
         pass
     return []
-
 
 def check_ollama_service(base_url: str = "http://localhost:11434") -> list:
     print("🔍 Checking Ollama service availability...")
@@ -45,7 +42,7 @@ def check_ollama_service(base_url: str = "http://localhost:11434") -> list:
         return models
     
     print("⚠️ Warning: Ollama service is not active. AI transformation gates will be disabled.")
-    return []  
+    return []
 
 
 def load_config(config_path: str = "config/pipeline.yaml") -> dict:

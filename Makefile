@@ -20,7 +20,7 @@ run:
 	python -u src/pipeline.py
 
 reset:
-	python scripts/reset.py
+	python src/reset.py
 
 clean:
 	docker-compose down -v
