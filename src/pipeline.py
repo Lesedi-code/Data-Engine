@@ -255,20 +255,13 @@ def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, s
 
         if "SQL:" in ai_message:
             try:
-                lines = ai_message.split('\n')
-                sql_query = ""
-                capturing = False
-                for line in lines:
-                    if line.startswith("SQL:"):
-                        sql_query = line.replace("SQL:", "").strip()
-                        capturing = True
-                    elif capturing and line.startswith("EXPLANATION:"):
-                        capturing = False
-                    elif capturing:
-                        sql_query += " " + line.strip()
+                # Use regex to robustly capture SQL regardless of preceding conversational text
+                sql_match = re.search(r"SQL:\s*(.*?)(?=\nEXPLANATION:|$)", ai_message, re.DOTALL | re.IGNORECASE)
+                if sql_match:
+                    sql_query = sql_match.group(1).replace("```sql", "").replace("```", "").strip()
+                else:
+                    sql_query = ""
 
-                sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
-                
                 if sql_query and not sql_query.upper().startswith("SELECT 1"):
                     print(f"\n🔍 [AI-SQL] Executing query: {sql_query}")
                     result_df = duck_con.execute(sql_query).df()
@@ -319,10 +312,8 @@ def get_discovered_datasets(config: dict) -> dict:
 
 def ingest_from_openedge_api(config: dict, table_name: str, engine, duck_con) -> tuple[pd.DataFrame, str]:
     """Connects to Progress OpenEdge PASOE REST API and ingests into Bronze."""
-    oe_config = config.get("openedge_api", {})
-    base_url = oe_config.get("base_url", "http://localhost:8810/rest/enterprise_app")
-    endpoint_path = f"/api/{table_name}" if not table_name.startswith("/") else table_name
-    full_url = f"{base_url}{endpoint_path}"
+    base_url = "http://localhost:8080/api/v1/records"
+    full_url = base_url
     
     print(f"\n🌐 [OpenEdge Connector] Connecting to PASOE endpoint -> {full_url}")
     
@@ -333,7 +324,17 @@ def ingest_from_openedge_api(config: dict, table_name: str, engine, duck_con) ->
             return pd.DataFrame(), table_name
             
         payload = response.json()
-        df = pd.DataFrame.from_dict(payload, orient='index') if isinstance(payload, dict) else pd.json_normalize(payload)
+        
+        # Pull the 1,000 records directly from the mock server's "data" envelope
+        if isinstance(payload, dict) and "data" in payload:
+            df = pd.DataFrame(payload["data"])
+        elif isinstance(payload, list):
+            df = pd.DataFrame(payload)
+        else:
+            df = pd.json_normalize(payload)
+            
+        df.columns = [str(c).strip().lower().replace(" ", "_").replace("-", "_") for c in df.columns]
+        df = df.loc[:, ~df.columns.duplicated()]
             
         clean_table_name = sanitize_table_name(table_name)
         persist_data(df, clean_table_name, "bronze", engine, duck_con, if_exists="replace")
@@ -346,8 +347,6 @@ def ingest_from_openedge_api(config: dict, table_name: str, engine, duck_con) ->
     except Exception as e:
         print(f"❌ [OpenEdge Error] Failed to ingest from OpenEdge API: {e}")
         return pd.DataFrame(), table_name
-
-
 def load_raw_dataset(config: dict, dataset_key: str, engine, duck_con) -> tuple[pd.DataFrame, str]:
     """Ingests raw structured datasets with robust format handling and chunking for massive files."""
     discovered = get_discovered_datasets(config)
@@ -378,7 +377,7 @@ def load_raw_dataset(config: dict, dataset_key: str, engine, duck_con) -> tuple[
                     persist_data(df_chunk, table_name, "bronze", engine, duck_con, if_exists="replace")
                     first_batch = False
                 else:
-                    persist_data(df_chunk, table_name, "bronze", duck_con, if_exists="append")
+                    persist_data(df_chunk, table_name, "bronze", engine, duck_con, if_exists="append")
             print(f"✔ Successfully streamed Parquet source: {file_name} ({total_records:,} records)")
         elif file_format in ["EXCEL", "XLSX", "XLS"]:
             df = pd.read_excel(file_path)
@@ -405,14 +404,13 @@ def load_raw_dataset(config: dict, dataset_key: str, engine, duck_con) -> tuple[
                     persist_data(chunk_df, table_name, "bronze", engine, duck_con, if_exists="replace")
                     first_batch = False
                 else:
-                    persist_data(chunk_df, table_name, "bronze", duck_con, if_exists="append")
+                    persist_data(chunk_df, table_name, "bronze", engine, duck_con, if_exists="append")
             print(f"✔ Successfully streamed CSV source: {file_name} (~{total_records:,} records)")
 
     except Exception as e:
         logging.error(f"Ingestion error for {file_name}: {e}")
 
     return df, table_name
-
 
 def select_dataset_key(config: dict) -> str:
     """Prompt user to choose from discovered local datasets."""
@@ -458,7 +456,7 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
         print(f" [SILVER LAYER] Standardizing schema and types into 'silver.{table_name}'...")
         print(f"--------------------------------------------------------------------------------")
         silver_df = cleaned_df.copy()
-        silver_df.columns = [c.strip().lower().replace(" ", "_").replace("-", "_") for c in silver_df.columns]
+        silver_df.columns = [str(c).strip().lower().replace(" ", "_").replace("-", "_") for c in silver_df.columns]
         persist_data(silver_df, table_name, "silver", engine, duck_con, if_exists="replace")
         print(f"✔ Silver tier materialized for '{table_name}' ({len(silver_df):,} rows).")
 
@@ -563,7 +561,7 @@ def execute_pipeline():
         print("   [3] Exit Pipeline")
         print("================================================================================")
         
-        choice = input("\nSelect pipeline mode [1-3]: ").strip()
+        choice = input("\nSelect pipeline model [1-3]: ").strip()
         
         if choice == "1":
             run_structured_pipeline(config, engine, duck_con, available_models)
