@@ -55,6 +55,13 @@ At its core, this project was built to solve a high-friction problem in data sci
                            │ Local AI Gate │    │ Gold CSV      │
                            │(Ollama Models)│    │ Local Exports │
                            └───────────────┘    └───────────────┘
+                           
+                                                     │
+                                                     ▼
+                           ┌─────────────────────────────────────┐
+                           │ Interactive Agentic RAG Chatbot     │
+                           │ (`src/agent_rag.py` via DeepSeek-R1)│
+                           └─────────────────────────────────────┘
 ```
 
 ### 2. Medallion Execution Pipeline & AI Gate Sequence
@@ -104,7 +111,11 @@ If you have `make` installed on your machine, you can run:
 
 ```bash
 make setup   # Installs dependencies & spins up PostgreSQL in Docker
+make mock    # Start the Progress OpenEdge mock server
 make run     # Launches the Master Orchestrator Pipeline
+make rag     # Launch the Agentic RAG Knowledge Layer
+make reset   # Reset environment (clear DuckDB & PostgreSQL schemas)
+make clean   # Stop Docker containers and clean local statestate"
 ```
 ## Get the Project Files
 You can obtain the project files using either of the following methods:
@@ -181,9 +192,9 @@ This section outlines the core engineering philosophy, architectural trade-offs,
 
 - **The Challenge:** Raw incoming data (multi-format CSVs, JSONs, Parquet, and Excel workbooks) often contains anomalies, duplicates, and missing values. Pushing raw data directly to reporting tools results in corrupted dashboards and incorrect business metrics.
 - **The Solution:** Implemented a strict 3-tier Medallion architecture:
-  - **Bronze Layer:** Acts as a faithful, immutable landing zone preserving raw multi-format imports inside PostgreSQL staging tables with automated file discovery and size-gated format warnings.
-  - **Silver Layer:** Standardizes data via deterministic cleaning, paired with an interactive AI transformation gate that permits local LLMs (Gemma) to draft, review, and execute safe DML/DDL queries with automatic transaction rollbacks on failure.
-  - **Gold Layer:** Pre-computes business-ready aggregate tables (`gold_*`) and metrics designed for direct consumption by downstream BI tools.
+- **Bronze Layer:** Acts as a faithful, immutable landing zone preserving raw multi-format imports inside PostgreSQL staging tables with automated file discovery and size-gated format warnings.
+- **Silver Layer:** Standardizes data via deterministic cleaning, paired with an interactive AI transformation gate that permits local LLMs (Gemma) to draft, review, and execute safe DML/DDL queries with automatic transaction rollbacks on failure.
+- **Gold Layer:** Pre-computes business-ready aggregate tables (`gold_*`) and metrics designed for direct consumption by downstream BI tools.
 - **Engineering Takeaway:** *Shows a deep understanding of modern data engineering best practices, separating data ingestion, cleansing, and serving concerns.*
 
 ### 3. Containerized Isolation & Local-First Agility
