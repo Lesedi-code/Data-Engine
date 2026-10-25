@@ -12,7 +12,9 @@ import pandas as pd
 import pyarrow.parquet as pq
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
+from rich.console import Console
 
+console = Console()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,14 +36,14 @@ def get_available_ollama_models(base_url: str) -> list:
     return []
 
 def check_ollama_service(base_url: str = "http://localhost:11434") -> list:
-    print("🔍 Checking Ollama service availability...")
+    console.print("🔍 [Ollama] Checking local AI service availability...")
     models = get_available_ollama_models(base_url)
     if models:
-        print("✔ Ollama service is active and responsive.")
-        print(f"📦 Discovered Local LLMs: {', '.join(models)}")
+        console.print("⚡ [Ollama] Service is active and responsive.")
+        console.print(f"📦 [Models] Discovered Local LLMs: {', '.join(models)}")
         return models
     
-    print("⚠️ Warning: Ollama service is not active. AI transformation gates will be disabled.")
+    console.print("⚠️ [Ollama] Warning: Service is not active. AI transformation gates will be disabled.")
     return []
 
 
@@ -181,12 +183,12 @@ def select_llm_model(available_models: list) -> str:
     if not available_models:
         return None
 
-    print("\n🤖 Select Local LLM Model for AI Gate:")
+    print("\n🤖 [AI Gate] Select Local LLM Model:")
     for idx, model_name in enumerate(available_models, 1):
-        print(f"   [{idx}] {model_name}")
+        print(f"   [{idx}] 🧠 {model_name}")
     
     skip_idx = len(available_models) + 1
-    print(f"   [{skip_idx}] Skip AI Gate (Proceed directly to Approval)")
+    print(f"   [{skip_idx}] ⏭️ Skip AI Gate (Proceed directly to Approval)")
     
     while True:
         choice = input(f"\nSelect option [1-{skip_idx}]: ").strip()
@@ -226,7 +228,7 @@ def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, s
     print("Type your data requests, correct spelling errors conversationally, or type 'done' to finish chatting and review data.\n")
 
     while True:
-        user_query = input(f"[{schema} - {model}] 👤 You: ").strip()
+        user_query = input(f"[{schema} | {model}] 👤 You: ").strip()
         if not user_query:
             continue
         if user_query.lower() in ['done', 'exit', 'quit', 'back']:
@@ -255,7 +257,6 @@ def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, s
 
         if "SQL:" in ai_message:
             try:
-                # Use regex to robustly capture SQL regardless of preceding conversational text
                 sql_match = re.search(r"SQL:\s*(.*?)(?=\nEXPLANATION:|$)", ai_message, re.DOTALL | re.IGNORECASE)
                 if sql_match:
                     sql_query = sql_match.group(1).replace("```sql", "").replace("```", "").strip()
@@ -266,12 +267,10 @@ def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, s
                     print(f"\n🔍 [AI-SQL] Executing query: {sql_query}")
                     result_df = duck_con.execute(sql_query).df()
                     
-                    # Sync changes back to PostgreSQL so both engines stay aligned
                     sync_duckdb_to_postgres(duck_con, engine, table_name, schema_name=schema)
 
                     if not result_df.empty:
                         total_rows = len(result_df)
-                        # Universal 1000 threshold limit
                         if total_rows > 1000:
                             preview_df = result_df.head(15)
                             print(f"\n📊 Query Results (Dataset exceeds 1,000 rows - Showing top 15 of {total_rows:,} rows):\n{preview_df.to_string(index=False)}")
@@ -315,17 +314,16 @@ def ingest_from_openedge_api(config: dict, table_name: str, engine, duck_con) ->
     base_url = "http://localhost:8080/api/v1/records"
     full_url = base_url
     
-    print(f"\n🌐 [OpenEdge Connector] Connecting to PASOE endpoint -> {full_url}")
+    print(f"\n🚀 [OpenEdge Connector] Connecting to PASOE endpoint -> {full_url}")
     
     try:
         response = requests.get(full_url, timeout=10)
         if response.status_code != 200:
-            print(f"❌ Error: OpenEdge API returned status code {response.status_code}.")
+            print(f"❌ [OpenEdge Error] API returned status code {response.status_code}.")
             return pd.DataFrame(), table_name
             
         payload = response.json()
         
-        # Pull the 1,000 records directly from the mock server's "data" envelope
         if isinstance(payload, dict) and "data" in payload:
             df = pd.DataFrame(payload["data"])
         elif isinstance(payload, list):
@@ -338,7 +336,7 @@ def ingest_from_openedge_api(config: dict, table_name: str, engine, duck_con) ->
             
         clean_table_name = sanitize_table_name(table_name)
         persist_data(df, clean_table_name, "bronze", engine, duck_con, if_exists="replace")
-        print(f"✔ [OpenEdge Ingestion] Successfully synced enterprise records into 'bronze.{clean_table_name}' ({len(df):,} records)")
+        print(f"✔ [OpenEdge Ingestion] Successfully synced records into 'bronze.{clean_table_name}' ({len(df):,} records)")
         return df, clean_table_name
         
     except requests.ConnectionError:
@@ -347,6 +345,8 @@ def ingest_from_openedge_api(config: dict, table_name: str, engine, duck_con) ->
     except Exception as e:
         print(f"❌ [OpenEdge Error] Failed to ingest from OpenEdge API: {e}")
         return pd.DataFrame(), table_name
+
+
 def load_raw_dataset(config: dict, dataset_key: str, engine, duck_con) -> tuple[pd.DataFrame, str]:
     """Ingests raw structured datasets with robust format handling and chunking for massive files."""
     discovered = get_discovered_datasets(config)
@@ -412,6 +412,7 @@ def load_raw_dataset(config: dict, dataset_key: str, engine, duck_con) -> tuple[
 
     return df, table_name
 
+
 def select_dataset_key(config: dict) -> str:
     """Prompt user to choose from discovered local datasets."""
     discovered = get_discovered_datasets(config)
@@ -421,9 +422,9 @@ def select_dataset_key(config: dict) -> str:
     if len(available) == 1:
         return available[0]
     
-    print("\n📂 Discovered Structured Files:")
+    print("\n📂 [Structured Dataset] Discovered local files:")
     for idx, key in enumerate(available, 1):
-        print(f"   [{idx}] {discovered[key].get('file_name')} ({discovered[key].get('format')})")
+        print(f"   [{idx}] 📄 {discovered[key].get('file_name')} ({discovered[key].get('format')})")
     
     while True:
         choice = input(f"\nSelect dataset [1-{len(available)}]: ").strip()
@@ -444,7 +445,7 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
         raw_df, table_name = load_raw_dataset(config, active_dataset, engine, duck_con)
 
     print(f"\n--------------------------------------------------------------------------------")
-    print(f" [BRONZE LAYER] Active table: 'bronze.{table_name}' ({len(raw_df):,} rows)")
+    print(f" 📦 [BRONZE LAYER] Active table: 'bronze.{table_name}' ({len(raw_df):,} rows)")
     print(f"--------------------------------------------------------------------------------")
 
     # 1. Automated Data Quality Gate
@@ -453,7 +454,7 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
     # 2. Silver Tier Transformation & Interactive Approval Gate Loop
     while True:
         print(f"--------------------------------------------------------------------------------")
-        print(f" [SILVER LAYER] Standardizing schema and types into 'silver.{table_name}'...")
+        print(f" 🛠️ [SILVER LAYER] Standardizing schema and types into 'silver.{table_name}'...")
         print(f"--------------------------------------------------------------------------------")
         silver_df = cleaned_df.copy()
         silver_df.columns = [str(c).strip().lower().replace(" ", "_").replace("-", "_") for c in silver_df.columns]
@@ -472,7 +473,6 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
                 elif action == 'inspect':
                     try:
                         row_count = duck_con.execute(f"SELECT COUNT(*) FROM silver.{table_name}").fetchone()[0]
-                        # Universal 1000 threshold limit for table inspection
                         if row_count > 1000:
                             preview_df = duck_con.execute(f"SELECT * FROM silver.{table_name} LIMIT 15").df()
                             print(f"\n📊 Current Silver Table Preview (Dataset exceeds 1,000 rows - Top 15 of {row_count:,}):\n{preview_df.to_string(index=False)}\n")
@@ -486,7 +486,7 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
         else:
             print("ℹ️ AI Gate bypassed. Proceeding directly to Silver Inspection & Approval.")
 
-        # Manual Inspection & Approval Gate before Gold Promotion (Metadata Summary only, skipping large data dumps)
+        # Manual Inspection & Approval Gate before Gold Promotion
         print(f"\n================================================================================")
         print(f" 🛡️ [SILVER INSPECTION & APPROVAL GATE] Table: 'silver.{table_name}'")
         print(f"================================================================================")
@@ -510,9 +510,9 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
             print("Pipeline promotion cancelled by user. Returning to Master Orchestrator menu.")
             return
 
-    # 3. Gold Tier Promotion (Only after explicit user approval)
+    # 3. Gold Tier Promotion
     print(f"--------------------------------------------------------------------------------")
-    print(f" [GOLD LAYER] Materializing analytical model into 'gold.{table_name}'...")
+    print(f" 🏆 [GOLD LAYER] Materializing analytical model into 'gold.{table_name}'...")
     print(f"--------------------------------------------------------------------------------")
     try:
         gold_df = duck_con.execute(f"SELECT * FROM silver.{table_name}").df()
@@ -553,12 +553,13 @@ def execute_pipeline():
     duck_con = get_duckdb_connection()
 
     while True:
+        console.print("[bold cyan]▶ Starting Medallion Pipeline...[/bold cyan]")
         print("\n================================================================================")
         print("                      DATA ENGINE - MASTER ORCHESTRATOR                         ")
         print("================================================================================")
-        print("   [1] Local Raw Files (CSV, Parquet, JSON, Excel from Structured_dataset)")
-        print("   [2] Progress OpenEdge PASOE REST API (Live Enterprise Stream)")
-        print("   [3] Exit Pipeline")
+        print("   [1] 📂 Local Raw Files (CSV, Parquet, JSON, Excel from Structured_dataset)")
+        print("   [2] 🚀 Progress OpenEdge PASOE REST API (Live Enterprise Stream)")
+        print("   [3] 🚪 Exit Pipeline")
         print("================================================================================")
         
         choice = input("\nSelect pipeline model [1-3]: ").strip()
@@ -572,6 +573,7 @@ def execute_pipeline():
                 if not oe_df.empty:
                     run_structured_pipeline(config, engine, duck_con, available_models, raw_df=oe_df, table_name=t_name)
         elif choice == "3":
+            console.print("[bold bright_green]✔ Pipeline complete.[/bold bright_green]")
             print("Shutting down Data Engine. Goodbye!")
             logging.info("Pipeline terminated normally by user.")
             sys.exit(0)
