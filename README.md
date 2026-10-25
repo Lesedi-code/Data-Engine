@@ -95,7 +95,11 @@ At its core, this project was built to solve a high-friction problem in data sci
  ┌───────────────┐
  │  GOLD LAYER   │ ──► Promote clean Silver tables to 'gold' schema & export CSV
  └───────────────┘
-
+        │
+        ▼
+ ┌───────────────┐
+ │   RAG AGENT   │ ──► Interactive NL-to-SQL exploration on Gold outputs via DeepSeek-R1
+ └───────────────┘
 ```
 # 🛠️ Step-by-Step Installation & Execution Guide
 
