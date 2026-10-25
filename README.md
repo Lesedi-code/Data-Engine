@@ -195,9 +195,9 @@ This section outlines the core engineering philosophy, architectural trade-offs,
 
 ### 4. High-Performance Bulk Streaming & Ingestion
 
-- **The Challenge:** Standard row-by-row database insertions (`INSERT INTO ... VALUES`) scale poorly and bottleneck heavily when processing tens of thousands of records.
-- **The Solution:** Bypassed row-by-row bottlenecks by leveraging optimized SQLAlchemy engines coupled with native high-performance binary streaming mechanisms and chunked iteration (e.g., 500k-row batching for large CSV/Parquet files) straight into PostgreSQL target schemas.
-- **Engineering Takeaway:** *Highlights optimization-minded coding practices and performance tuning for high-volume data pipelines.*
+- **The Challenge:** Standard Python-based data tools (like Pandas) force entire datasets into system RAM. When processing massive analytical volumes (such as 250 million+ rows), this instantly triggers Out-Of-Memory (OOM) crashes the moment the input file footprint exceeds available memory.
+- **The Solution:** Bypassed Pandas memory bottlenecks entirely by leveraging DuckDB’s out-of-core, vectorized columnar architecture. Instead of loading files into RAM, DuckDB streams compressed data blocks and executes analytical operations directly off disk. Combined with optimized chunked batching (e.g., 500k-row windows), the system maintains a flat, predictable RAM footprint regardless of dataset scale.
+- **Engineering Takeaway:** Enables high-performance local processing of enterprise-scale datasets on standard developer hardware without requiring expensive cloud cluster memory scaling.
 
 ### 5. Fault-Tolerant Graceful Degradation (Production Resilience)
 
