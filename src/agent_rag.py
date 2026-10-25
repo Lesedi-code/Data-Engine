@@ -75,19 +75,26 @@ class AgenticRAG:
         return schema_desc
 
     def query_duckdb(self, sql_query: str):
-        """Tool: Query structured tables or direct CSV files via DuckDB with auto path resolution."""
+        """Tool: Query structured tables or direct CSV files via DuckDB with auto path resolution and gold priority."""
         conn = duckdb.connect(self.db_path, read_only=True)
         try:
             clean_sql = re.sub(r'```[a-zA-Z]*|```', '', sql_query).strip()
             
-            # Automatically resolve CSV file paths across the project workspace
+            # Automatically resolve CSV file paths across the project workspace with gold-layer priority
             for match_file in re.findall(r"['\"]([a-zA-Z0-9_\-\.]+\.csv)['\"]", clean_sql):
                 found_path = match_file
                 if not os.path.exists(found_path):
+                    candidate_paths = []
                     for root, dirs, files in os.walk('.'):
+                        dirs[:] = [d for d in dirs if d not in {'venv', '.git', '__pycache__'}]
                         if match_file in files:
-                            found_path = os.path.join(root, match_file)
-                            break
+                            candidate_paths.append(os.path.join(root, match_file))
+                    
+                    if candidate_paths:
+                        # Prioritize paths containing 'gold' (e.g. Data/gold/) over raw backups
+                        gold_matches = [p for p in candidate_paths if 'gold' in p.lower()]
+                        found_path = gold_matches[0] if gold_matches else candidate_paths[0]
+
                 clean_sql = clean_sql.replace(f"'{match_file}'", f"'{found_path}'").replace(f'"{match_file}"', f'"{found_path}"')
 
             result = conn.execute(clean_sql).fetchdf()
