@@ -208,11 +208,28 @@ def select_llm_model(available_models: list) -> str:
 
 
 def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, schema: str = "silver", model: str = "gemma4:e4b"):
-    """Maintains a conversational chat loop with the selected LLM, allowing iterative refinements and typo corrections."""
+    """Maintains a conversational chat loop with the selected LLM with dynamic, format-agnostic schema introspection."""
+    
+    # Introspect schema and sample data dynamically from DuckDB
+    try:
+        schema_df = duck_con.execute(f"DESCRIBE {schema}.{table_name}").df()
+        sample_df = duck_con.execute(f"SELECT * FROM {schema}.{table_name} LIMIT 3").df()
+        columns_info = "\n".join([f"- {row['column_name']} ({row['column_type']})" for _, row in schema_df.iterrows()])
+        sample_str = sample_df.to_string(index=False)
+    except Exception as e:
+        columns_info = f"Error retrieving schema: {e}"
+        sample_str = "No sample available."
+
     system_prompt = (
-        f"You are an expert data engineer assisting Lesedi Motleleng for a data science competition. "
-        f"You have access to a table named '{schema}.{table_name}' inside DuckDB. "
-        f"When the user requests a modification or query, write a valid DuckDB SQL query. "
+        f"You are an expert data engineer assisting Lesedi Motleleng for a data science competition.\n"
+        f"You are operating on DuckDB table '{schema}.{table_name}'.\n\n"
+        f"AVAILABLE SCHEMA (Use ONLY these exact column names):\n{columns_info}\n\n"
+        f"SAMPLE RECORDS (First 3 rows):\n{sample_str}\n\n"
+        f"STRICT AGNOSTIC EXECUTION RULES:\n"
+        f"1. PHYSICAL TARGET: Always output a direct physical table mutation: `CREATE OR REPLACE TABLE {schema}.{table_name} AS ...`\n"
+        f"2. STRICT COLUMN BOUNDARY: Use ONLY the exact column names listed in the schema above. Do not invent, rename, or pluralize column names unless explicitly instructed.\n"
+        f"3. SAFE TYPE CASTING: For any multiplication or arithmetic (e.g., quantity * price_per_unit), EVERY individual column operand MUST be explicitly wrapped in `TRY_CAST(col AS DOUBLE)` or `TRY_CAST(col AS INTEGER)` (e.g., `TRY_CAST(quantity AS DOUBLE) * TRY_CAST(price_per_unit AS DOUBLE)`). Never mix uncasted columns with arithmetic operators.\n"
+        f"4. EXPLICIT PROJECTION: Do not use `SELECT *` alongside modified column aliases. Explicitly list all output columns in the final projection.\n\n"
         f"Return your response in this exact format:\n"
         f"SQL: <your sql query here>\n"
         f"EXPLANATION: <brief explanation>\n"
