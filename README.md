@@ -11,9 +11,13 @@ At its core, this project was built to solve a high-friction problem in data sci
 - **Data & Analytics Engineers:** Teams managing complex, multi-format data pipelines who require robust Data Quality (DQ) assertion gates and dual-engine persistence.
 - **Enterprise Operations & IT:** Organizations running legacy backend infrastructure (such as Progress OpenEdge systems) that require modern, secure, API-driven data extraction routes without risking database locks or production downtime.
 
-### Core Pillars
-
 - **Data Science & Analytics Focus:** Automated diagnostic profiling provides immediate visual shape, missing-value density maps, and frees practitioners from mechanical data chores.
+- **Dual-Engine Persistence & Compute:**
+  - **DuckDB:** High-performance local OLAP analytical compute driving vectorized operations across the Medallion layers.
+  - **PostgreSQL:** Persistent enterprise staging synchronization across all tiers (`bronze`, `silver`, `gold`).
+- **Dual-LLM Strategy (Powered by Ollama):**
+  - **Gemma:** Optimized for precise, deterministic SQL generation, schema introspection, and robust data cleaning (`TRY_CAST` guardrails) during Silver tier transformations.
+  - **DeepSeek-R1:** Leveraged for advanced chain-of-thought reasoning, exploratory data analysis, RAG advisory, and machine learning pipeline recommendations in the interactive terminal knowledge layer.
 - **Medallion Data Architecture:**
   - **Bronze Layer (Ingestion & Profiling):** Raw multi-format imports (`.csv`, `.json`, `.parquet`, `.xlsx`) or live enterprise REST streams streamed straight into PostgreSQL and DuckDB `bronze_*` staging tables with automated file discovery and size-gated format warnings.
   - **Silver Layer (Cleaning & Standardization):** Missing value imputation, date parsing, string normalization (`INITCAP`), primary key deduplication, and interactive AI-driven SQL transformation gates powered by local Ollama models.
