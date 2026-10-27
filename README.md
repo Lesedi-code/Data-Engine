@@ -24,6 +24,10 @@ At its core, this project was built to solve a high-friction problem in data sci
   - **Gold Layer (Delivery & Exports):** Automated extraction from Silver into business-ready aggregate tables (`gold_*`), reporting CSV exports (`Data/gold/`), and executive visual analytics.
 - **High-Performance Streaming:** Bypasses slow row-by-row insertions by using optimized SQLAlchemy engines and binary/chunked streaming mechanisms straight into PostgreSQL and DuckDB OLAP targets.
 
+## 🎥 Project Demos & Walkthroughs
+You can view the full video walkthroughs for this data engine project here:
+- [Watch Data Engine & RAG Demo Recordings (Google Drive)](https://drive.google.com/drive/folders/1e2bHdWj3m2JS6KJWUOHKyqvh39ctSbOn)
+
 ---
 
 ## 📐 System Architecture Diagrams
