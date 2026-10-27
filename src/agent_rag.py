@@ -52,14 +52,12 @@ class AgenticRAG:
         schema_desc = ""
         conn = duckdb.connect(self.db_path, read_only=True)
         try:
-            # Check DuckDB tables
             tables = conn.execute("SHOW TABLES;").fetchdf()
             if not tables.empty:
                 schema_desc += f"DuckDB Tables:\n{tables.to_string(index=False)}\n\n"
         except Exception:
             pass
 
-        # Scan workspace for CSV files and get their columns
         schema_desc += "Workspace CSV Files & Columns:\n"
         for root, dirs, files in os.walk('.'):
             dirs[:] = [d for d in dirs if d not in {'venv', '.git', '__pycache__'}]
@@ -80,7 +78,6 @@ class AgenticRAG:
         try:
             clean_sql = re.sub(r'```[a-zA-Z]*|```', '', sql_query).strip()
             
-            # Automatically resolve CSV file paths across the project workspace with gold-layer priority
             for match_file in re.findall(r"['\"]([a-zA-Z0-9_\-\.]+\.csv)['\"]", clean_sql):
                 found_path = match_file
                 if not os.path.exists(found_path):
@@ -91,7 +88,6 @@ class AgenticRAG:
                             candidate_paths.append(os.path.join(root, match_file))
                     
                     if candidate_paths:
-                        # Prioritize paths containing 'gold' (e.g. Data/gold/) over raw backups
                         gold_matches = [p for p in candidate_paths if 'gold' in p.lower()]
                         found_path = gold_matches[0] if gold_matches else candidate_paths[0]
 
@@ -108,15 +104,15 @@ class AgenticRAG:
         """Chatbot execution loop with schema awareness and think tag cleaning."""
         workspace_schema = self._get_workspace_schema()
 
+        # FIXED SYSTEM PROMPT: Allows both SQL queries and general Python/ML strategy discussions
         system_prompt = (
-            "You are an enterprise data assistant with access to a local DuckDB data warehouse "
+            "You are an enterprise data assistant and machine learning engineer with access to a local DuckDB data warehouse "
             "and local project CSV files.\n\n"
             f"{workspace_schema}\n"
-            "CRITICAL INSTRUCTIONS:\n"
-            "1. ALWAYS use the exact column names listed above when writing SQL queries (e.g., use 'description' for product text, never guess column names like 'product' or 'manufacturer').\n"
-            "2. If the user asks about a CSV file or table, ALWAYS write a SQL query inside a ```sql ``` block.\n"
-            "3. You can query CSV files directly using standard DuckDB syntax with the correct file path or filename.\n"
-            "4. Do NOT tell the user to load or create tables—just execute the SQL query on the CSV file directly."
+            "INSTRUCTIONS:\n"
+            "1. If the user asks to query, inspect, or aggregate data from tables/CSV files, write a standard DuckDB query inside a ```sql ``` block.\n"
+            "2. If the user asks about machine learning models, python code, strategy, or general architecture, provide clear explanations or Python code blocks (using ```python ```). Do NOT force everything into SQL.\n"
+            "3. ALWAYS use exact column names when referencing workspace files."
         )
         
         messages = [
@@ -130,15 +126,9 @@ class AgenticRAG:
         # Strip out DeepSeek reasoning tags
         assistant_message = re.sub(r'<think>.*?</think>', '', assistant_message, flags=re.DOTALL).strip()
 
-        # Try finding standard ```sql ... ``` block
-        sql_match = re.search(r'```(?:sql|sqlite)?\s*(.*?)```', assistant_message, re.DOTALL | re.IGNORECASE)
-        
-        if sql_match:
-            sql_query = sql_match.group(1).strip()
-        else:
-            # Fallback: Catch any raw SELECT ... FROM statement in the text
-            raw_sql_match = re.search(r'(SELECT\s+.*?\s+FROM\s+[\'"]?[\w\.-]+[\'"]?.*?;?)', assistant_message, re.DOTALL | re.IGNORECASE)
-            sql_query = raw_sql_match.group(1).strip() if raw_sql_match else None
+        # FIXED EXECUTION GUARD: ONLY look for explicitly tagged ```sql ... ``` blocks to run against DuckDB
+        sql_match = re.search(r'```sql\s+(.*?)```', assistant_message, re.DOTALL | re.IGNORECASE)
+        sql_query = sql_match.group(1).strip() if sql_match else None
 
         if sql_query and len(sql_query) > 5:
             print(f"\n⚙️ [Running Query]: {sql_query}")
@@ -151,6 +141,7 @@ class AgenticRAG:
             final_content = final_response['message']['content']
             return re.sub(r'<think>.*?</think>', '', final_content, flags=re.DOTALL).strip()
         
+        # If it's Python code, strategy advice, or normal text, return it directly without trying to query DuckDB!
         return assistant_message
 
 if __name__ == "__main__":
