@@ -15,4 +15,4 @@ __pycache__/
 .DS_Store
 
 # Exclude raw test data from GitHub
-Data/
+Data/.DS_Store
