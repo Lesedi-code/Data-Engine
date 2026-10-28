@@ -210,7 +210,6 @@ def select_llm_model(available_models: list) -> str:
 def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, schema: str = "silver", model: str = "gemma4:e4b"):
     """Maintains a conversational chat loop with the selected LLM with dynamic, format-agnostic schema introspection."""
     
-    # Introspect schema and sample data dynamically from DuckDB
     try:
         schema_df = duck_con.execute(f"DESCRIBE {schema}.{table_name}").df()
         sample_df = duck_con.execute(f"SELECT * FROM {schema}.{table_name} LIMIT 3").df()
@@ -227,9 +226,10 @@ def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, s
         f"SAMPLE RECORDS (First 3 rows):\n{sample_str}\n\n"
         f"STRICT AGNOSTIC EXECUTION RULES:\n"
         f"1. PHYSICAL TARGET: Always output a direct physical table mutation: `CREATE OR REPLACE TABLE {schema}.{table_name} AS ...`\n"
-        f"2. STRICT COLUMN BOUNDARY: Use ONLY the exact column names listed in the schema above. Do not invent, rename, or pluralize column names unless explicitly instructed.\n"
-        f"3. SAFE TYPE CASTING: For any multiplication or arithmetic (e.g., quantity * price_per_unit), EVERY individual column operand MUST be explicitly wrapped in `TRY_CAST(col AS DOUBLE)` or `TRY_CAST(col AS INTEGER)` (e.g., `TRY_CAST(quantity AS DOUBLE) * TRY_CAST(price_per_unit AS DOUBLE)`). Never mix uncasted columns with arithmetic operators.\n"
-        f"4. EXPLICIT PROJECTION: Do not use `SELECT *` alongside modified column aliases. Explicitly list all output columns in the final projection.\n\n"
+        f"2. PRESERVE COLUMN HEADERS: Never alter, rename, or wrap original column names in functions (like UPPER or LOWER) unless the user explicitly requests it. By default, keep every column header with its exact original name.\n"
+        f"3. STRICT COLUMN BOUNDARY: Use ONLY the exact column names listed in the schema above. Do not invent, rename, or pluralize column names.\n"
+        f"4. SAFE TYPE CASTING & ALIASING: If you must compute or cast a column (e.g., arithmetic), you MUST use an explicit alias matching the exact original column name (e.g., `TRY_CAST(total_spent AS DOUBLE) AS total_spent`) so headers never change.\n"
+        f"5. EXPLICIT PROJECTION: Prefer `SELECT *, ...` or explicitly list all columns to ensure no original headers are lost or renamed accidentally.\n\n"
         f"Return your response in this exact format:\n"
         f"SQL: <your sql query here>\n"
         f"EXPLANATION: <brief explanation>\n"
@@ -305,7 +305,7 @@ def ask_model_with_sql(prompt_context: str, duck_con, engine, table_name: str, s
 
 
 def get_discovered_datasets(config: dict) -> dict:
-    """Dynamically discover structured files in Structured_dataset."""
+    """Dynamically discover all structured files in Structured_dataset."""
     dirs = config.get("directories", {})
     raw_root = dirs.get("raw") or "Data/raw"
     struct_dir = os.path.join(raw_root, "Structured_dataset")
@@ -318,10 +318,11 @@ def get_discovered_datasets(config: dict) -> dict:
     ext_map = {".csv": "CSV", ".json": "JSON", ".parquet": "PARQUET", ".xlsx": "EXCEL", ".xls": "EXCEL"}
     for item in os.listdir(struct_dir):
         item_path = os.path.join(struct_dir, item)
-        if os.path.isfile(item_path):
+        if os.path.isfile(item_path) and not item.startswith('.'):
             ext = os.path.splitext(item)[1].lower()
             if ext in ext_map:
-                key = sanitize_table_name(item)
+                base_key = sanitize_table_name(item)
+                key = f"{base_key}_{ext.strip('.')}"
                 discovered[key] = {"file_name": item, "file_path": item_path, "format": ext_map[ext]}
     return discovered
 
@@ -468,6 +469,34 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
     # 1. Automated Data Quality Gate
     cleaned_df = run_data_quality_assertions(raw_df, table_name)
 
+    # Bronze Tier Inspection & Pause Gate (Clean Silver-style behavior)
+    while True:
+        print(f"\n================================================================================")
+        print(f" 🔍 [BRONZE INSPECTION GATE] Table: 'bronze.{table_name}'")
+        print(f"================================================================================")
+        try:
+            row_count = duck_con.execute(f"SELECT COUNT(*) FROM bronze.{table_name}").fetchone()[0]
+            print(f"   • Target Table   : bronze.{table_name}")
+            print(f"   • Total Rows     : {row_count:,}")
+            print(f"   • Storage Status : Persisted in DuckDB and synchronized with PostgreSQL staging.")
+        except Exception as e:
+            print(f"   • Notice: Table metadata retrieved successfully.")
+
+        action = input("\nPress [Enter] to continue, type 'inspect' to see first 15 rows, or 'n' to return: ").strip().lower()
+        if action == 'inspect':
+            try:
+                preview_df = duck_con.execute(f"SELECT * FROM bronze.{table_name} LIMIT 15").df()
+                print(f"\n📊 Bronze Table Preview (First 15 rows):\n{preview_df.to_string(index=False)}\n")
+                continue
+            except Exception as e:
+                print(f"❌ Error loading preview: {e}")
+        elif action == 'n':
+            print("Pipeline execution stopped at Bronze layer. Returning to Master Orchestrator menu.")
+            return
+        else:
+            print("✔ Proceeding to Silver layer standardization...")
+            break
+
     # 2. Silver Tier Transformation & Interactive Approval Gate Loop
     while True:
         print(f"--------------------------------------------------------------------------------")
@@ -478,11 +507,9 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
         persist_data(silver_df, table_name, "silver", engine, duck_con, if_exists="replace")
         print(f"✔ Silver tier materialized for '{table_name}' ({len(silver_df):,} rows).")
 
-        # Interactive Model Selection for Silver AI Gate (with Skip Option)
         selected_model = select_llm_model(available_models)
 
         if selected_model:
-            # Human-in-the-Loop Interactive AI Chat Gate: Silver Layer
             while True:
                 action = input(f"\n[SILVER GATE - Model: {selected_model}] Press [Enter] to start AI Chat, type 'inspect' to preview table, or type 'done' to finish transformations: ").strip().lower()
                 if action == 'done':
@@ -503,7 +530,6 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
         else:
             print("ℹ️ AI Gate bypassed. Proceeding directly to Silver Inspection & Approval.")
 
-        # Manual Inspection & Approval Gate before Gold Promotion
         print(f"\n================================================================================")
         print(f" 🛡️ [SILVER INSPECTION & APPROVAL GATE] Table: 'silver.{table_name}'")
         print(f"================================================================================")
@@ -515,17 +541,25 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
         except Exception as e:
             print(f"   • Notice: Table metadata retrieved successfully.")
 
-        approval = input("\nDo you approve these changes and wish to promote to Gold? [y = Approve & Promote, r = Return to AI Chat, n = Cancel & Return to Menu]: ").strip().lower()
-        
+        while True:
+            approval = input("\nDo you approve these changes and wish to promote to Gold? [y = Approve & Promote, r = Return to AI Chat, n = Cancel & Return to Menu]: ").strip().lower()
+            
+            if approval == 'y':
+                print("✔ Changes approved! Proceeding to Gold tier promotion.")
+                break
+            elif approval == 'r':
+                print("Returning to Silver AI Chat loop for further adjustments...")
+                break
+            elif approval == 'n':
+                print("Pipeline promotion cancelled by user. Returning to Master Orchestrator menu.")
+                return
+            else:
+                print("⚠️ Invalid input. Please enter 'y' (approve), 'r' (return to chat), or 'n' (cancel).")
+
         if approval == 'y':
-            print("✔ Changes approved! Proceeding to Gold tier promotion.")
             break
         elif approval == 'r':
-            print("Returning to Silver AI Chat loop for further adjustments...")
             continue
-        else:
-            print("Pipeline promotion cancelled by user. Returning to Master Orchestrator menu.")
-            return
 
     # 3. Gold Tier Promotion
     print(f"--------------------------------------------------------------------------------")
@@ -539,7 +573,6 @@ def run_structured_pipeline(config: dict, engine, duck_con, available_models: li
     persist_data(gold_df, table_name, "gold", engine, duck_con, if_exists="replace")
     print(f"✔ Gold tier materialized for '{table_name}' ({len(gold_df):,} rows).")
 
-    # Automated Export: Gold Tier CSV Export
     dirs = config.get("directories", {})
     gold_export_dir = dirs.get("gold") or "Data/gold"
     os.makedirs(gold_export_dir, exist_ok=True)
