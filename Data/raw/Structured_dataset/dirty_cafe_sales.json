@@ -1,0 +1,202 @@
+[
+  {
+    "Transaction ID":"TXN_1961373",
+    "Item":"Coffee",
+    "Quantity":2,
+    "Price Per Unit":2.0,
+    "Total Spent":"4.0",
+    "Payment Method":"Credit Card",
+    "Location":"Takeaway",
+    "Transaction Date":"2023-09-08"
+  },
+  {
+    "Transaction ID":"TXN_4977031",
+    "Item":"Cake",
+    "Quantity":4,
+    "Price Per Unit":3.0,
+    "Total Spent":"12.0",
+    "Payment Method":"Cash",
+    "Location":"In-store",
+    "Transaction Date":"2023-05-16"
+  },
+  {
+    "Transaction ID":"TXN_4271903",
+    "Item":"Cookie",
+    "Quantity":4,
+    "Price Per Unit":1.0,
+    "Total Spent":"ERROR",
+    "Payment Method":"Credit Card",
+    "Location":"In-store",
+    "Transaction Date":"2023-07-19"
+  },
+  {
+    "Transaction ID":"TXN_7034554",
+    "Item":"Salad",
+    "Quantity":2,
+    "Price Per Unit":5.0,
+    "Total Spent":"10.0",
+    "Payment Method":"UNKNOWN",
+    "Location":"UNKNOWN",
+    "Transaction Date":"2023-04-27"
+  },
+  {
+    "Transaction ID":"TXN_3160411",
+    "Item":"Coffee",
+    "Quantity":2,
+    "Price Per Unit":2.0,
+    "Total Spent":"4.0",
+    "Payment Method":"Digital Wallet",
+    "Location":"In-store",
+    "Transaction Date":"2023-06-11"
+  },
+  {
+    "Transaction ID":"TXN_2602893",
+    "Item":"Smoothie",
+    "Quantity":5,
+    "Price Per Unit":4.0,
+    "Total Spent":"20.0",
+    "Payment Method":"Credit Card",
+    "Location":null,
+    "Transaction Date":"2023-03-31"
+  },
+  {
+    "Transaction ID":"TXN_4433211",
+    "Item":"UNKNOWN",
+    "Quantity":3,
+    "Price Per Unit":3.0,
+    "Total Spent":"9.0",
+    "Payment Method":"ERROR",
+    "Location":"Takeaway",
+    "Transaction Date":"2023-10-06"
+  },
+  {
+    "Transaction ID":"TXN_6699534",
+    "Item":"Sandwich",
+    "Quantity":4,
+    "Price Per Unit":4.0,
+    "Total Spent":"16.0",
+    "Payment Method":"Cash",
+    "Location":"UNKNOWN",
+    "Transaction Date":"2023-10-28"
+  },
+  {
+    "Transaction ID":"TXN_4717867",
+    "Item":null,
+    "Quantity":5,
+    "Price Per Unit":3.0,
+    "Total Spent":"15.0",
+    "Payment Method":null,
+    "Location":"Takeaway",
+    "Transaction Date":"2023-07-28"
+  },
+  {
+    "Transaction ID":"TXN_2064365",
+    "Item":"Sandwich",
+    "Quantity":5,
+    "Price Per Unit":4.0,
+    "Total Spent":"20.0",
+    "Payment Method":null,
+    "Location":"In-store",
+    "Transaction Date":"2023-12-31"
+  },
+  {
+    "Transaction ID":"TXN_2548360",
+    "Item":"Salad",
+    "Quantity":5,
+    "Price Per Unit":5.0,
+    "Total Spent":"25.0",
+    "Payment Method":"Cash",
+    "Location":"Takeaway",
+    "Transaction Date":"2023-11-07"
+  },
+  {
+    "Transaction ID":"TXN_3051279",
+    "Item":"Sandwich",
+    "Quantity":2,
+    "Price Per Unit":4.0,
+    "Total Spent":"8.0",
+    "Payment Method":"Credit Card",
+    "Location":"Takeaway",
+    "Transaction Date":"ERROR"
+  },
+  {
+    "Transaction ID":"TXN_7619095",
+    "Item":"Sandwich",
+    "Quantity":2,
+    "Price Per Unit":4.0,
+    "Total Spent":"8.0",
+    "Payment Method":"Cash",
+    "Location":"In-store",
+    "Transaction Date":"2023-05-03"
+  },
+  {
+    "Transaction ID":"TXN_9437049",
+    "Item":"Cookie",
+    "Quantity":5,
+    "Price Per Unit":1.0,
+    "Total Spent":"5.0",
+    "Payment Method":null,
+    "Location":"Takeaway",
+    "Transaction Date":"2023-06-01"
+  },
+  {
+    "Transaction ID":"TXN_8915701",
+    "Item":"ERROR",
+    "Quantity":2,
+    "Price Per Unit":1.5,
+    "Total Spent":"3.0",
+    "Payment Method":null,
+    "Location":"In-store",
+    "Transaction Date":"2023-03-21"
+  },
+  {
+    "Transaction ID":"TXN_2847255",
+    "Item":"Salad",
+    "Quantity":3,
+    "Price Per Unit":5.0,
+    "Total Spent":"15.0",
+    "Payment Method":"Credit Card",
+    "Location":"In-store",
+    "Transaction Date":"2023-11-15"
+  },
+  {
+    "Transaction ID":"TXN_3765707",
+    "Item":"Sandwich",
+    "Quantity":1,
+    "Price Per Unit":4.0,
+    "Total Spent":"4.0",
+    "Payment Method":null,
+    "Location":null,
+    "Transaction Date":"2023-06-10"
+  },
+  {
+    "Transaction ID":"TXN_6769710",
+    "Item":"Juice",
+    "Quantity":2,
+    "Price Per Unit":3.0,
+    "Total Spent":"6.0",
+    "Payment Method":"Cash",
+    "Location":"In-store",
+    "Transaction Date":"2023-02-24"
+  },
+  {
+    "Transaction ID":"TXN_8876618",
+    "Item":"Cake",
+    "Quantity":5,
+    "Price Per Unit":3.0,
+    "Total Spent":"15.0",
+    "Payment Method":"Cash",
+    "Location":"ERROR",
+    "Transaction Date":"2023-03-25"
+  },
+  {
+    "Transaction ID":"TXN_3709394",
+    "Item":"Juice",
+    "Quantity":4,
+    "Price Per Unit":3.0,
+    "Total Spent":"12.0",
+    "Payment Method":"Cash",
+    "Location":"Takeaway",
+    "Transaction Date":"2023-01-15"
+  }
+]
